@@ -1,0 +1,33 @@
+=Sheet1!$O$350:$O$520
+
+525 964
+
+6:35 - 20:30
+
+=vertailu!$M$1796:$M$1963
+=vertailu!$C$1796:$C$1963
+
+=vertailu!$M$596:$M$762
+=vertailu!$C$596:$C$762
+
+=vertailu!$M$791:$M$958
+=vertailu!$C$791:$C$958
+
+=vertailu!$M$988:$M$1155
+=vertailu!$C$988:$C$1155
+
+=vertailu!$M$1189:$M$1356
+=vertailu!$C$1189:$C$1356
+
+
+
+=vertailu!$O$1982:$O$2149
+
+
+31.54
+39.60
+39.65
+39.20
+37.85
+38.69
+34.89
