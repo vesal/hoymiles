@@ -4,3 +4,4 @@ aurinko.txt
 *.bak
 __pycache__/
 .idea/ 
+*.pdf

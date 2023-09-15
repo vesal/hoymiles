@@ -1,10 +1,11 @@
+import sys
 import datetime
 import json
 import threading
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import requests
 
-from HoymilesPrint import get_plant_data, append_to_file, get_power
+from HoymilesPrint import get_plant_data, append_to_file, get_power, print_status, glo_inverters, glo_panels
 
 server_port = 8001
 kwhmeter_url = "http://192.168.59.68:2222/REF"
@@ -13,7 +14,7 @@ kwhmeter_url = "http://192.168.59.68:2222/REF"
 def get_next_update_time():
     # Lasketaan seuraava tasaminuutti
     now = datetime.datetime.now()
-    next_minute = (now.replace(second=0, microsecond=0) + datetime.timedelta(minutes=1, seconds=5))
+    next_minute = (now.replace(second=0, microsecond=0) + datetime.timedelta(minutes=1))
     minutes = next_minute.minute
     if minutes in [0, 15, 30, 45]:  # jätetään väliin vartit
         next_minute = next_minute + datetime.timedelta(minutes=1)
@@ -42,8 +43,11 @@ def get_hoymiles_data():
         if not new_plant_data:
             print("no new plant data")
             return
+        # print(datetime.datetime.now().time(), "haku")
+        print_status(new_plant_data, glo_inverters, glo_panels, sys.stdout, True)
+        append_to_file(new_plant_data)
     except Exception as err:
-        print(datetime.datetime.now().time(), err)
+        print("Exception: ", datetime.datetime.now().time(), err)
         return
 
 
@@ -96,6 +100,10 @@ def handle_kwh_meter():
 
 class MyHandler(BaseHTTPRequestHandler):
     def do_GET(self):
+        if self.path == "/favicon.ico":
+            self.send_response(404)
+            self.end_headers()
+            return
         self.send_response(200)
         self.send_header('Content-type', 'application/json')
         self.end_headers()
@@ -115,13 +123,12 @@ class MyHandler(BaseHTTPRequestHandler):
         self.wfile.write(json_data.encode('utf-8'))
         print(data)
 
-def run(server_class=HTTPServer, handler_class=MyHandler, port=server_port):
+def run(server_class=ThreadingHTTPServer, handler_class=MyHandler, port=server_port):
     server_address = ('', port)
     httpd = server_class(server_address, handler_class)
     print('Serving at port', port)
     get_hoymiles_data()
     # threading.Timer(get_next_update_time()[0], get_hoymiles_data).start()
     httpd.serve_forever()
-
 
 run()
