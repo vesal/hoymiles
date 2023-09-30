@@ -1,0 +1,14 @@
+.tPanel {
+  stroke-width:2;
+  stroke:#386bbe;
+  fill:#ffffff;
+  font-size:60%;
+}
+.PanelFrame{stroke-width:2;fill:white}
+.PanelRelativeValueFrame{stroke-width:0;fill:yellow;}
+/*.tTextValueControl .ValueNameBox{}*/
+.tPanel .ValueNameText{stroke:white; fill:white; text-anchor:start; stroke-width:1}
+.ValueBox{fill:none;}
+.ValueBoxRelativeFill{stroke-width:0;fill:yellow;}
+.tPanel .valueText{stroke:black; fill:black; stroke-width:1 ;font-size:180%}
+

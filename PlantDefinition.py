@@ -12,10 +12,10 @@ glo_inverters = ['116484414833', '116484414805', '116484414779', '116484414773',
 # If you have initialized Hoymiles cloud plant layout, you can read inverterter serialnumbers
 # and ports from layout picture.
 
-#glo_panels = [
-#    [(0, 4), (0, 2), None,   (1, 3), (1, 2), None,   (1, 1), (2, 4), (2, 3), (2, 2), (2, 1), (3, 2)],
-#    [(0, 3), (0, 1), None,   None,   None,   None,   None,   None,   None,   (3, 4), (3, 3), (3, 1)],
-#]
+# glo_panels = [
+#     [(0, 4), (0, 2), (1, 4), (1, 3), (1, 2), None,   (1, 1), (2, 4), (2, 3), (2, 2), (2, 1), (3, 2)],
+#     [(0, 3), (0, 1), None,   None,   None,   None,   None,   None,   None,   (3, 4), (3, 3), (3, 1)],
+# ]
 
 glo_panels = [
     [(0, 3), (0, 4), (1, 3), (1, 4)],
@@ -25,8 +25,10 @@ glo_panels = [
     [(4, 1), (4, 2), (4, 3), (4, 4)],
 ]
 
+glo_panel_powers = 505
+
 # declare status destination file used by append_to_file
-glo_status_destination_file='aurinko1.txt'
+glo_status_destination_file='aurinko.txt'
 
 # Some language dependent strings for status printing.
 glo_print_temperatures_label="Lämpötilat:"
