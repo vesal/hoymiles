@@ -1,0 +1,260 @@
+0|state_id|INTEGER|1||1            27055481
+1|entity_id|VARCHAR(255)|0||0
+2|state|VARCHAR(255)|0||0
+3|attributes|TEXT|0||0
+4|event_id|INTEGER|0||0
+5|last_changed|DATETIME|0||0
+6|last_updated|DATETIME|0||0
+7|old_state_id|INTEGER|0||0
+8|attributes_id|INTEGER|0||0
+9|context_id|VARCHAR(36)|0||0
+10|context_user_id|VARCHAR(36)|0||0
+11|context_parent_id|VARCHAR(36)|0||0
+12|origin_idx|SMALLINT|0||0
+13|last_updated_ts|FLOAT|0||0
+14|last_changed_ts|FLOAT|0||0
+15|context_id_bin|BLOB|0||0
+16|context_user_id_bin|BLOB|0||0
+17|context_parent_id_bin|BLOB|0||0
+18|metadata_id|INTEGER|0||0
+sqlite> SELECT *  FROM states LIMIT 20;
+
+   0      1  2        3 4 5 6 7  8    9 10 11 12  13              14
+ 27055481||333042.328| | | | | |11805| |  |  | 0|1696468321.21153|  |
+
+
+SELECT 
+  strftime('%Y-%m-%d', datetime(s.last_updated_ts, 'unixepoch')) AS ldate,
+  MAX(s.state) - MIN(s.state) AS daily_consumption
+FROM states AS s
+JOIN states_meta AS sm ON s.metadata_id = sm.metadata_id
+WHERE sm.entity_id = 'sensor.kwhmetergeokwh'
+AND datetime(s.last_updated_ts, 'unixepoch') >= date('now', '-20 days')
+GROUP BY ldate
+ORDER BY ldate
+LIMIT 20;
+
+
+SELECT 
+  strftime('%Y-%m-%d-%H', datetime(s.last_updated_ts, 'unixepoch', 'localtime')) AS ldate,
+  MIN(s.state) AS daily_consumption1,
+  MAX(s.state) AS daily_consumption2
+FROM states AS s
+JOIN states_meta AS sm ON s.metadata_id = sm.metadata_id
+WHERE sm.entity_id = 'sensor.kwhmetergeokwh'
+AND datetime(s.last_updated_ts, 'unixepoch', 'localtime') >= date('now', '-2 days')
+GROUP BY ldate
+ORDER BY ldate
+LIMIT 50;
+
+
+SELECT
+  datetime(s.last_updated_ts, 'unixepoch', 'localtime') AS ldate,
+  s.state AS daily_consumption1
+
+FROM states AS s
+JOIN states_meta AS sm ON s.metadata_id = sm.metadata_id
+WHERE sm.entity_id = 'sensor.kwhmetergeokwh'
+AND datetime(s.last_updated_ts, 'unixepoch', 'localtime') >= date('now', '-3 hours', 'localtime')
+GROUP BY ldate
+ORDER BY ldate
+LIMIT 100;
+
+
+ SELECT
+  datetime(last_updated_ts, 'unixepoch', 'localtime') AS ltimestamp,
+  state AS hourly_consumption
+FROM states AS s
+JOIN states_meta AS sm ON s.metadata_id = sm.metadata_id
+WHERE sm.entity_id = 'sensor.kwhmetergeokwh'
+AND datetime(s.last_updated_ts, 'unixepoch', 'localtime') >= datetime('now', '-3 hours', 'localtime')
+GROUP BY ltimestamp
+ORDER BY ltimestamp
+LIMIT 100;
+
+
+SELECT 
+  strftime('%Y-%m-%d %H', datetime(last_updated_ts, 'unixepoch', 'localtime')) AS ltimestamp,
+  (CASE 
+    WHEN MAX(state) = 'unknown' OR MIN(state) = 'unknown' THEN NULL
+    ELSE MAX(state) - MIN(state)
+  END) AS hourly_consumption
+FROM states AS s
+JOIN states_meta AS sm ON s.metadata_id = sm.metadata_id
+WHERE sm.entity_id = 'sensor.kwhmetergeokwh'
+AND datetime(s.last_updated_ts, 'unixepoch', 'localtime') >= datetime('now', '-3 hours', 'localtime')
+GROUP BY ltimestamp
+ORDER BY ltimestamp;
+
+
+SELECT 
+  strftime('%Y-%m-%d %H', datetime(last_updated_ts, 'unixepoch', 'localtime')) AS ltimestamp,
+  MAX(state) - MIN(state) AS hourly_consumption
+FROM states AS s
+JOIN states_meta AS sm ON s.metadata_id = sm.metadata_id
+WHERE sm.entity_id = 'sensor.kwhmetergeokwh'
+AND datetime(s.last_updated_ts, 'unixepoch', 'localtime') >= datetime('now', '-3 hours', 'localtime')
+AND s.state != 'unknown' 
+GROUP BY ltimestamp
+ORDER BY ltimestamp;
+
+
+SELECT 
+  strftime('%Y-%m-%d', datetime(last_updated_ts, 'unixepoch', 'localtime')) AS ltimestamp,
+  MAX(state) - MIN(state) AS hourly_consumption
+FROM states AS s
+JOIN states_meta AS sm ON s.metadata_id = sm.metadata_id
+WHERE sm.entity_id = 'sensor.kwhmetergeokwh'
+AND datetime(s.last_updated_ts, 'unixepoch', 'localtime') >= datetime('now', '-20 days', 'localtime')
+AND s.state != 'unknown' 
+GROUP BY ltimestamp
+ORDER BY ltimestamp;
+
+
+ SELECT
+  strftime('%Y-%m-%d', datetime(last_updated_ts, 'unixepoch', 'localtime')) AS ltimestamp,
+  MIN(state) AS consumption
+FROM states AS s
+JOIN states_meta AS sm ON s.metadata_id = sm.metadata_id
+WHERE sm.entity_id = 'sensor.kwhmetergeokwh'
+AND datetime(s.last_updated_ts, 'unixepoch', 'localtime') >= datetime('now', '-20 days', 'localtime')
+AND s.state != 'unknown'
+GROUP BY ltimestamp
+ORDER BY ltimestamp;
+
+
+('2023-10-05', '167050.11')
+('2023-10-06', '167066.922')
+('2023-10-07', '167089.163')
+('2023-10-08', '167112.207')
+('2023-10-09', '167142.284')
+('2023-10-10', '167163.617')
+('2023-10-11', '167184.959')
+('2023-10-12', '167194.398')
+('2023-10-13', '167214.274')
+('2023-10-14', '167231.773')
+('2023-10-15', '167240.564')
+
+
+2023-10-05 16.81
+2023-10-06 22.24
+2023-10-07 23.04
+2023-10-08 30.08
+2023-10-09 21.33
+2023-10-10 21.34
+2023-10-11 9.44
+2023-10-12 19.88
+2023-10-13 17.5
+2023-10-14 8.79
+
+
+
+
+88|sensor.energy_production_today                
+89|sensor.energy_production_today_remaining
+90|sensor.energy_production_tomorrow
+94|sensor.energy_current_hour
+95|sensor.energy_next_hour
+136|sensor.shellyplug_s_7c87ceb4aa37_energy       sh1
+142|sensor.shellyplug_s_c8c9a3a4f917_energy       sh2
+148|sensor.shellyplug_s_7c87ceb54d4a_energy       sh3 
+206|sensor.pvenergytotal
+207|sensor.pvenergytoday
+216|sensor.shellyplug_s_7c87ceb50aaa_energy       sh5  
+222|sensor.shellyplug_s_7c87ceb4dfaa_energy       sh4 
+228|sensor.shellyplug_s_7c87ceb4b211_energy       sh6
+234|sensor.shellyplug_s_7c87ceb54caa_energy       sh7
+341|sensor.shellyplug_s_7c87ceba96d8_energy       sh8
+349|sensor.shellyplus1pm_4855199d7388_switch_0_energy
+361|sensor.shp1_energy
+367|sensor.12_energy
+373|sensor.sh11_energy
+379|sensor.sh9_energy
+385|sensor.sh10_energy
+395|sensor.sh1pm1_switch_0_energy
+403|sensor.sh1pm2_switch_0_energy
+411|sensor.sh1pm3_switch_0_energy
+450|sensor.layzspa_wifi_controller_layzspa_energy
+
+
+2023-10-05 [0.35, 2.22, 1.35, 0.08, 0.03, 0.04, 0.0, 0.09, 16.81
+2023-10-06 [0.32, 2.75, 0.34, 0.91, 0.04, 0.05, 0.0, 0.12, 22.24
+2023-10-07 [0.23, 2.74, 1.02, '', 0.62, 0.05, 1.07, 0.14, 23.04
+2023-10-08 [0.19, 2.84, 0.74, '', 0.04, 0.05, 1.08, 0.14, 30.08
+2023-10-09 [0.19, 2.72, 0.24, '', 2.03, 0.05, 0.01, 0.13, 21.33
+2023-10-10 [0.19, 2.61, 0.45, '', 0.04, 0.05, 1.06, 0.07, 21.34
+2023-10-11 [0.19, 2.74, 0.69, '', 0.55, 0.05, '', 0.06, 9.44
+2023-10-12 [0.19, 2.83, 0.9, '', 2.34, 0.05, 1.45, 0.05, 19.88
+2023-10-13 [0.19, 4.41, 1.66, '', 2.06, 0.05, 0.0, 0.05, 17.5
+2023-10-14 [0.19, 1.17, 0.43, '', 1.91, 0.05, 1.09, '', 8.79
+
+
+SELECT
+  strftime('%Y-%m-%d', datetime(last_updated_ts, 'unixepoch', 'localtime')) AS ltimestamp,
+  MAX(state) AS consumption
+FROM states AS s
+JOIN states_meta AS sm ON s.metadata_id = sm.metadata_id
+WHERE sm.entity_id = 'sensor.pvenergytoday'
+AND datetime(s.last_updated_ts, 'unixepoch', 'localtime') >= datetime('now', '-20 days', 'localtime')
+AND s.state != 'unknown'
+GROUP BY ltimestamp
+ORDER BY ltimestamp;
+
+SELECT
+  strftime('%Y-%m-%d', datetime(last_updated_ts, 'unixepoch', 'localtime')) AS ltimestamp,
+  state AS consumption
+FROM states AS s
+JOIN states_meta AS sm ON s.metadata_id = sm.metadata_id
+WHERE sm.entity_id = 'sensor.pvenergytoday'
+AND datetime(s.last_updated_ts, 'unixepoch', 'localtime') >= datetime('now', '-20 days', 'localtime')
+AND s.state != 'unknown'
+GROUP BY ltimestamp
+ORDER BY ltimestamp;
+
+
+ SELECT
+  strftime('%Y-%m-%d', datetime(last_updated_ts, 'unixepoch', 'localtime')) AS ltimestamp,
+  MIN(state) AS consumption
+FROM states AS s
+JOIN states_meta AS sm ON s.metadata_id = sm.metadata_id
+WHERE sm.entity_id = 'sensor.shellyplug_s_c8c9a3a4f917_energy'
+AND datetime(s.last_updated_ts, 'unixepoch', 'localtime') >= datetime('now', '-20 days', 'localtime')
+AND s.state != 'unknown'
+GROUP BY ltimestamp
+ORDER BY ltimestamp;
+
+2023-10-05|74.1420666666667
+2023-10-06|76.3650833333333
+2023-10-07|79.1157833333333
+2023-10-08|81.8513
+2023-10-09|84.69145
+2023-10-10|87.4151666666667
+2023-10-11|90.0294166666667
+2023-10-12|92.7705333333333
+2023-10-13|95.5960833333333
+2023-10-14|100.00435
+2023-10-15|101.17025
+
+ SELECT
+  strftime('%Y-%m-%d', datetime(last_updated_ts, 'unixepoch', 'localtime')) AS ltimestamp,
+  MIN(CAST(s.state AS REAL)) AS consumption,
+  MIN(state) AS consumption2
+FROM states AS s
+JOIN states_meta AS sm ON s.metadata_id = sm.metadata_id
+WHERE sm.entity_id = 'sensor.shellyplug_s_7c87ceb4aa37_energy'
+AND datetime(s.last_updated_ts, 'unixepoch', 'localtime') >= datetime('now', '-20 days', 'localtime')
+AND s.state != 'unknown'
+GROUP BY ltimestamp
+ORDER BY ltimestamp;
+
+
+ SELECT
+  strftime('%Y-%m-%d', datetime(last_updated_ts, 'unixepoch', 'localtime')) AS ltimestamp,
+  MIN(CAST(s.state AS REAL)) AS consumption
+FROM states AS s
+JOIN states_meta AS sm ON s.metadata_id = sm.metadata_id
+WHERE sm.entity_id = 'sensor.shellyplug_s_7c87ceb4aa37_energy'
+AND datetime(s.last_updated_ts, 'unixepoch', 'localtime') >= datetime('now', '-20 days', 'localtime')
+AND s.state != 'unknown'
+GROUP BY ltimestamp
+ORDER BY ltimestamp;

@@ -101,17 +101,25 @@ def handle_kwh_meter():
     }
 
 
+
 class MyHandler(BaseHTTPRequestHandler):
+    def get_png(self, t):
+        self.send_response(200)
+        self.send_header("Content-type", "image/png")
+        self.end_headers()
+        image = get_panels_png(last_plant_data, t)
+        output = BytesIO()
+        image.save(output, format="PNG")
+        self.wfile.write(output.getvalue())
+        return t
+
     def do_GET(self):
         if self.path == "/GetPanelPng":
-            self.send_response(200)
-            self.send_header("Content-type", "image/png")
-            self.end_headers()
-            image = get_panels_png()
-            output = BytesIO()
-            image.save(output, format="PNG")
-            self.wfile.write(output.getvalue())
-            return
+            return self.get_png(1);
+        if self.path == "/GetPanelPng2":
+            return self.get_png(2);
+        if self.path == "/GetPanelPng3":
+            return self.get_png(3);
         if self.path == "/favicon.ico":
             self.send_response(404)
             self.end_headers()
@@ -129,7 +137,7 @@ class MyHandler(BaseHTTPRequestHandler):
             data2 = handle_kwh_meter()
             data = {**data1, **data2}
         elif self.path == "/GetPanelData":
-            data = get_panels_json()
+            data = get_panels_json(last_plant_data)
         else:
             data = {
                 'message': 'Tuntematon kutsu?'
