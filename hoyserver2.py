@@ -76,7 +76,7 @@ def handle_hoymiles():
                 }
     total = float(last_plant_data.total_production)
     today = float(last_plant_data.today_production)
-    if total == 0:
+    if total < 6428000: # prevent mornig problem
         total = None
     if today == 0:
         today = None

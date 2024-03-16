@@ -32,11 +32,12 @@ def print_powers(powers, file):
         file.write("\n")
 
 
-def print_temperatures(temperatures, file):
+def print_temperatures(temperatures, file, lf = True):
     file.write("      "+glo_print_temperatures_label)
     for d in temperatures:
         file.write(f"{d:5.1f}"+" °C")
-    file.write("\n")
+    if lf:
+        file.write("\n")
 
 
 def print_status(plant_data, inverters, panels, file, min_print):
@@ -118,8 +119,9 @@ def print_status(plant_data, inverters, panels, file, min_print):
             file.write(str(d.strftime("%Y-%m-%d %H:%M:%S")) + " " +
                        f";{sum_power / 1000:5.2f};{min_power:5.1f};{max_power:5.1f};" +
                        " " + str(min_pos) + " ; " + str(max_pos) + " " +
-                       f";{plant_data.today_production / 1000:9.3f};{lost:6.1f};{min(temps):6.1f};{max(temps):6.1f}"
-                       + "\n")
+                       f";{plant_data.today_production / 1000:9.3f};{lost:6.1f};{min(temps):6.1f};{max(temps):6.1f}" +
+                       f";{plant_data.total_production / 1000:9.3f}" +
+                       "\n")
 
 def get_power(plant_data):
     microinverter_data = plant_data.microinverter_data

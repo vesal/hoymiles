@@ -5,3 +5,4 @@ aurinko.txt
 __pycache__/
 .idea/ 
 *.pdf
+*secret*

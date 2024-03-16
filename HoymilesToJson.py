@@ -40,8 +40,8 @@ def add_powers(powers, result_json):
 # *****************************************************************************
 def hoymiles_to_json(plant_data, inverters, panels, panel_max_powers=None):
     result_json = {"Power": 0}
-    if panel_max_powers is not None:
-        result_json["MaxPower"] = 0
+    # if panel_max_powers is not None:
+    result_json["MaxPower"] = 0
     result_json["EnergyToday"] = 0
     result_json["EnergyTotal"] = 0
     result_json["PanelsMax"] = 0
@@ -132,6 +132,7 @@ def get_panels_json(plant_data):
     try:
         panel_max_powers = glo_panel_powers
     except NameError:
+        print("No glo_panel_powers")
         panel_max_powers = None
 
     # print(panel_max_powers)
@@ -150,6 +151,9 @@ def draw_panel_by_json(draw, panel, font, t, panels_max):
     panel_x_cap = 5
     panel_y_cap = 2
     panel_power = (panel["Power"] or 0)  # + 200
+    if not panel.get("MaxPower", None):
+        panel["MaxPower"] = 505
+        print(panel)
     panel_pros = panel_power / panel["MaxPower"]
     x = panel["Location"]["x"] * (panel_width + panel_x_cap) + 10
     y = panel["Location"]["y"] * (panel_height + panel_y_cap) + 10
@@ -160,7 +164,9 @@ def draw_panel_by_json(draw, panel, font, t, panels_max):
         c = int(panel_pros * 255)
         draw.rectangle((x, y, x + panel_width, y + panel_height), fill=(0, 0, c))
     if t == 3:
-        c = int(panel_power / panels_max * 255)
+        c = 0
+        if (panels_max > 0):
+            c = int(panel_power / panels_max * 255)
         draw.rectangle((x, y, x + panel_width, y + panel_height), fill=(0, 0, c))
 
     draw.text((x+10, y+20), str(panel_power) + " W", font=font, fill=(255, 255, 255))
@@ -185,10 +191,13 @@ def get_panels_png(plant_data, t):
     power = json['Power']
     n = len(json["PanelsData"])
     abs_max = n * float(json['PanelsMax'])
+    pros_max = 0
+    if abs_max != 0:
+        pros_max = int(power/abs_max*100)
 
     s = str(power) + " W. " + str(json['PanelsMin']) + \
         " - " + str(json['PanelsMax']) + " W" + \
-        " " + str(abs_max) + " W " + str(int(power/abs_max*100)) + "%"
+        " " + str(abs_max) + " W " + str(pros_max) + "%"
 
     draw.text((x, y), s , font=font, fill=(0,0,0))
 
