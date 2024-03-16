@@ -51,6 +51,7 @@ def check_ping(host):
 
 if __name__ == "__main__":
     # Pääohjelma
+    time.sleep(60)  # Odota että kaikki ehtii asettua
     while True:
         ping_output = check_ping(target_host)
         if ping_output:
