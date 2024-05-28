@@ -1,5 +1,6 @@
 import sys
 import datetime
+import logging
 import json
 import threading
 # from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -11,14 +12,32 @@ from hoymiles_modbus2.datatypes import PlantData
 from typing import Union
 from io import BytesIO
 
+# Luodaan logger-olio
+logger = logging.getLogger('hsrv')
+logger.setLevel(logging.INFO)
+
+# Luodaan tiedostoon kirjoittava käsittelijä
+file_handler = logging.FileHandler('hoyserver.log')
+file_handler.setLevel(logging.INFO)
+
+# Määritetään muotoilu tiedostoon kirjoitettaville merkinnöille
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+file_handler.setFormatter(formatter)
+
+# Liitetään käsittelijä loggeriin
+logger.addHandler(file_handler)
+
+last_geo_kWh_total = 174008  # 28.5.2024, ks yleisnäkymän sensori kwhMeterGeokWh
+last_pw_total = 8848640 # 28.5.2025 ks http://volga2:8001/all ja ota arvo pvEnergyTotal
+
 server_port = 8001
 kwhmeter_url = "http://192.168.59.68:2222/REF"
 
 
 def get_next_update_time():
-    # Lasketaan seuraava tasaminuutti
+    # Lasketaan seuraava tasaminuutti + 30 sec
     now = datetime.datetime.now()
-    next_minute = (now.replace(second=0, microsecond=0) + datetime.timedelta(minutes=1))
+    next_minute = (now.replace(second=0, microsecond=0) + datetime.timedelta(minutes=1) + datetime.timedelta(seconds=30))
     # minutes = next_minute.minute
     # if minutes in [0, 15, 30, 45]:  # jätetään väliin vartit
     #    next_minute = next_minute + datetime.timedelta(minutes=1)
@@ -68,6 +87,7 @@ def get_hoymiles_data():
 
 
 def handle_hoymiles():
+    global last_pw_total
     if not last_plant_data:
         return {'pvPower': 0,
                 'last_plant_data': None,
@@ -76,8 +96,11 @@ def handle_hoymiles():
                 }
     total = float(last_plant_data.total_production)
     today = float(last_plant_data.today_production)
-    if total < 6428000: # prevent mornig problem
+    if total < last_pw_total: # prevent morning problem
+        logger.error(f"pvTotal error: {last_pw_total} {total}")
         total = None
+    else:
+        last_pw_total = total
     if today == 0:
         today = None
     return {'pvPower': float(last_plant_data.pv_power),
@@ -145,6 +168,7 @@ class MyHandler(BaseHTTPRequestHandler):
         json_data = json.dumps(data)
         self.wfile.write(json_data.encode('utf-8'))
         print(data)
+        logger.info(data)
 
 
 # def run(server_class=ThreadingHTTPServer, handler_class=MyHandler, port=server_port):

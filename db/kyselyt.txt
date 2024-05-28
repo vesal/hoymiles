@@ -237,8 +237,7 @@ ORDER BY ltimestamp;
 
  SELECT
   strftime('%Y-%m-%d', datetime(last_updated_ts, 'unixepoch', 'localtime')) AS ltimestamp,
-  MIN(CAST(s.state AS REAL)) AS consumption,
-  MIN(state) AS consumption2
+  MIN(CAST(s.state AS REAL)) AS consumption
 FROM states AS s
 JOIN states_meta AS sm ON s.metadata_id = sm.metadata_id
 WHERE sm.entity_id = 'sensor.shellyplug_s_7c87ceb4aa37_energy'
@@ -249,12 +248,17 @@ ORDER BY ltimestamp;
 
 
  SELECT
-  strftime('%Y-%m-%d', datetime(last_updated_ts, 'unixepoch', 'localtime')) AS ltimestamp,
-  MIN(CAST(s.state AS REAL)) AS consumption
+  strftime('%Y-%m-%d-%H-%M-%S', datetime(last_updated_ts, 'unixepoch', 'localtime')) AS ltimestamp,
+  MIN(CAST(s.state AS REAL)) AS consumption,
+  MIN(state) AS consumption2,
+  state
 FROM states AS s
 JOIN states_meta AS sm ON s.metadata_id = sm.metadata_id
 WHERE sm.entity_id = 'sensor.shellyplug_s_7c87ceb4aa37_energy'
-AND datetime(s.last_updated_ts, 'unixepoch', 'localtime') >= datetime('now', '-20 days', 'localtime')
-AND s.state != 'unknown'
+AND ltimestamp like "2023-10-05-10-01%" 
+
+AND (s.state != 'unknown' OR s.state != 'unavailable')
 GROUP BY ltimestamp
 ORDER BY ltimestamp;
+
+2023-10-05-10-01

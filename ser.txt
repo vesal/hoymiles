@@ -1,0 +1,27 @@
+Serving at port 8001
+12:26:32.780155 next:  27.219845
+12:26:32.780155 start
+12:26:35.732265 end
+Haku: 2024-03-23 12:26:35
+
+2024-03-23 12:26:35 ; 1.44; 70.0; 74.2; (2, 0) ; (1, 2) ;    3.146;  47.9;  11.5;  15.9; 6855.277
+2024-03-23 12:26:32.773155 -> 12:26:35.733791 : 1436.1 W 0 W
+Haku: 2024-03-23 12:26:35
+
+12:27:00.013668 next:  59.986332
+12:27:00.013668 start
+Exception:  12:27:04.271761 Modbus Error: [Input/Output] Modbus Error: [Invalid Message] No response received, expected at least 8 bytes (0 received)
+12:28:00.006293 next:  59.993707
+12:28:00.006293 start
+Exception:  12:28:03.884300 Modbus Error: [Input/Output] Modbus Error: [Invalid Message] No response received, expected at least 8 bytes (0 received)
+{'pvPower': 1436.1, 'pvEnergyTotal': 6855277.0, 'pvEnergyToday': 3146.0, 'mainkW': 2.671, 'mainkWh': 341993.685, 'geokW': 3.284, 'geokWh': 172792.339}
+{'pvPower': 1436.1, 'pvEnergyTotal': 6855277.0, 'pvEnergyToday': 3146.0, 'mainkW': 2.82, 'mainkWh': 341993.693, 'geokW': 3.513, 'geokWh': 172792.349}
+12:29:00.015079 next:  59.984921
+12:29:00.015079 start
+Exception:  12:29:04.037362 Modbus Error: [Input/Output] Modbus Error: [Invalid Message] No response received, expected at least 8 bytes (0 received)
+12:30:00.011147 next:  59.988853
+12:30:00.011147 start
+Exception:  12:30:07.223193 Modbus Error: [Input/Output] Modbus Error: [Invalid Message] No response received, expected at least 8 bytes (0 received)
+12:31:00.005587 next:  59.994413
+12:31:00.005587 start
+Exception:  12:31:06.024754 Modbus Error: [Input/Output] Modbus Error: [Invalid Message] No response received, expected at least 8 bytes (0 received)
