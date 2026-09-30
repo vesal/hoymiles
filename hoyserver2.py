@@ -27,8 +27,9 @@ file_handler.setFormatter(formatter)
 # Liitetään käsittelijä loggeriin
 logger.addHandler(file_handler)
 
-last_geo_kWh_total = 174008  # 28.5.2024, ks yleisnäkymän sensori kwhMeterGeokWh
-last_pw_total = 8848640 # 28.5.2025 ks http://volga2:8001/all ja ota arvo pvEnergyTotal
+last_geo_kWh_total = 177343  # 27.12.2024, ks yleisnäkymän sensori kwhMeterGeokWh
+# last_pw_total = 9827466 # 28.12.2024 ks http://volga2:8001/all ja ota arvo pvEnergyTotal
+last_pw_total = 11869515 # 30.9.2026 ks http://volga2:8001/all ja ota arvo pvEnergyTotal
 
 server_port = 8001
 kwhmeter_url = "http://192.168.59.68:2222/REF"
@@ -124,6 +125,14 @@ def handle_kwh_meter():
     }
 
 
+def handle_kwh_meter_dummy():
+    return {
+        'mainkW': 0,
+        'mainkWh': 0,
+        'geokW': 0,
+        'geokWh': 0
+    }
+
 
 class MyHandler(BaseHTTPRequestHandler):
     def get_png(self, t):
@@ -157,7 +166,7 @@ class MyHandler(BaseHTTPRequestHandler):
             data = handle_hoymiles()
         elif self.path == "/all":
             data1 = handle_hoymiles()
-            data2 = handle_kwh_meter()
+            data2 = handle_kwh_meter_dummy()
             data = {**data1, **data2}
         elif self.path == "/GetPanelData":
             data = get_panels_json(last_plant_data)

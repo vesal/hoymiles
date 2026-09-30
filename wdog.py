@@ -51,9 +51,10 @@ def check_ping(host):
 
 if __name__ == "__main__":
     # Pääohjelma
-    time.sleep(60)  # Odota että kaikki ehtii asettua
+    # time.sleep(60)  # Odota että kaikki ehtii asettua
     while True:
         ping_output = check_ping(target_host)
+        ping_output = "Kissa"
         if ping_output:
             print(ftime(), "Ping failed!", ping_output)
             send_email(ping_output)
