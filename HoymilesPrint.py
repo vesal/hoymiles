@@ -1,38 +1,40 @@
 import datetime
-from typing import Tuple, NewType, List
+from typing import List
 from decimal import Decimal
 from PlantDefinition import *
 
-from hoymiles_modbus2.client import HoymilesModbusTCP
-from hoymiles_modbus2.datatypes import MicroinverterType
+from hoymiles_adapter import HoymilesModbusTCP, MicroinverterType
+from HoymilesToJson import NUMBER_OF_PV_PANELS, find_panel_pos
 
+"""
 NUMBER_OF_PV_PANELS = len(glo_inverters)*4
 
 Coord = NewType('Coord', Tuple[int, int])
 Panels = NewType('GloPanels', List[List[Coord]])
 
 
-def find_panel_pos(panels: Panels, inv_index: int, port: int) -> Coord:
+def find_panel_pos(panels: Panels, inv_index: int, port: int) -> Coord | None:
     coord = (inv_index, port)
     for pr in range(0, len(panels)):
         for pc in range(0, len(panels[pr])):
             if panels[pr][pc] == coord:
                 return Coord((pr, pc))
     return None
+"""
 
 
 def print_powers(powers, file):
     for pr in range(0, len(powers)):
         file.write("     ")
         for pc in range(0, len(powers[pr])):
-            if powers[pr][pc]!=None:
-              file.write(f"{powers[pr][pc]:5.1f} ")
+            if powers[pr][pc] is not None:
+                file.write(f"{powers[pr][pc]:5.1f} ")
             else:
-              file.write("      ")
+                file.write("      ")
         file.write("\n")
 
 
-def print_temperatures(temperatures, file, lf = True):
+def print_temperatures(temperatures, file, lf=True):
     file.write("      "+glo_print_temperatures_label)
     for d in temperatures:
         file.write(f"{d:5.1f}"+" °C")
@@ -43,14 +45,14 @@ def print_temperatures(temperatures, file, lf = True):
 def print_status(plant_data, inverters, panels, file, min_print):
     microinverter_data = plant_data.microinverter_data
 
-    powers: List[List[Decimal]] = []
+    powers: List[List[Decimal | None]] = []
     for ir in range(0, len(panels)):
-        r: List[Decimal] = []
+        r: List[Decimal | None] = []
         for ic in range(0, len(panels[ir])):
-            if panels[ir][ic]!=None:
-              r.append(Decimal(0))
+            if panels[ir][ic] is not None:
+                r.append(Decimal(0))
             else:
-              r.append(None)
+                r.append(None)
         powers.append(r)
 
     temps = []
@@ -67,10 +69,13 @@ def print_status(plant_data, inverters, panels, file, min_print):
     lost = 0
 
     d = datetime.datetime.now()
-    print("Haku: " + str(d.strftime("%Y-%m-%d %H:%M:%S")) +"\n")
+    print("Haku: " + str(d.strftime("%Y-%m-%d %H:%M:%S")) + "\n")
     for microinverter in microinverter_data:
         if not microinverter.link_status:
-            print("ERROR: " + str(d.strftime("%Y-%m-%d %H:%M:%S")) + " " + str(microinverter.serial_number) + " " + str(microinverter.port_number) + " " + str(microinverter.pv_power) +"\n")
+            print("ERROR: " + str(d.strftime("%Y-%m-%d %H:%M:%S")) +
+                  " " + str(microinverter.serial_number) +
+                  " " + str(microinverter.port_number) +
+                  " " + str(microinverter.pv_power) + "\n")
         if microinverter.link_status or True:
             # print(microinverter.serial_number,microinverter.port_number, microinverter.pv_power)
             ser = microinverter.serial_number
@@ -82,23 +87,23 @@ def print_status(plant_data, inverters, panels, file, min_print):
 
             w = microinverter.pv_power
             pos = find_panel_pos(panels, inv_index, port)
-            if pos!=None:
-              pr: int = pos[0]
-              pc: int = pos[1]
-              powers[pr][pc] = w
-              sum_power += w
-              if w < min_power:
-                  min_power = w
-                  min_pos = pos
-              if w > max_power:
-                  max_power = w
-                  max_pos = pos
+            if pos is not None:
+                pr: int = pos[0]
+                pc: int = pos[1]
+                powers[pr][pc] = w
+                sum_power += w
+                if w < min_power:
+                    min_power = w
+                    min_pos = pos
+                if w > max_power:
+                    max_power = w
+                    max_pos = pos
 
-              lost = 0
-              for pr in range(0, len(powers)):
-                  for pc in range(0, len(powers[pr])):
-                      if powers[pr][pc]!=None:
-                        lost += (max_power - powers[pr][pc])
+                lost = 0
+                for pr in range(0, len(powers)):
+                    for pc in range(0, len(powers[pr])):
+                        if powers[pr][pc] is not None:
+                            lost += (max_power - powers[pr][pc])
 
     d = datetime.datetime.now()
     if not min_print:
@@ -123,6 +128,7 @@ def print_status(plant_data, inverters, panels, file, min_print):
                        f";{plant_data.total_production / 1000:9.3f}" +
                        "\n")
 
+
 def get_power(plant_data):
     microinverter_data = plant_data.microinverter_data
     sum_power = 0
@@ -132,16 +138,17 @@ def get_power(plant_data):
             sum_power += w
     return sum_power
 
+
 # noinspection PyBroadException
 def get_plant_data():
-    #try:
-        hoy_tcp = HoymilesModbusTCP(DTU_IP,
-                                    microinverter_type=MicroinverterType.HM,
-                                    number_of_pv_panels=NUMBER_OF_PV_PANELS)
-        # Seuraava on se joka vie aikaa
-        plant_data = hoy_tcp.plant_data
-        return plant_data
-    #except:
+    # try:
+    hoy_tcp = HoymilesModbusTCP(DTU_IP,
+                                microinverter_type=MicroinverterType.HM,
+                                number_of_pv_panels=NUMBER_OF_PV_PANELS)
+    # Seuraava on se joka vie aikaa
+    plant_data = hoy_tcp.plant_data
+    return plant_data
+    # except:
     #    return None
 
 

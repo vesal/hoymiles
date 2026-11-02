@@ -8,8 +8,8 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 import requests
 from HoymilesPrint import get_plant_data, append_to_file, get_power, print_status, glo_inverters, glo_panels
 from HoymilesToJson import get_panels_json, get_panels_png
-from hoymiles_modbus2.datatypes import PlantData
-from typing import Union
+from hoymiles_adapter import PlantData
+from typing import Any, Union, Callable
 from io import BytesIO
 
 # Luodaan logger-olio
@@ -28,17 +28,20 @@ file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
 last_geo_kWh_total = 177343  # 27.12.2024, ks yleisnäkymän sensori kwhMeterGeokWh
-# last_pw_total = 9827466 # 28.12.2024 ks http://volga2:8001/all ja ota arvo pvEnergyTotal
-last_pw_total = 11869515 # 30.9.2026 ks http://volga2:8001/all ja ota arvo pvEnergyTotal
+# last_pw_total = 9827466  # 28.12.2024 ks http://volga2:8001/all ja ota arvo pvEnergyTotal
+# last_pw_total = 11869515  # 30.9.2026 ks http://volga2:8001/all ja ota arvo pvEnergyTotal
+last_pw_total = 12092451  # 2.11.2026 ks http://volga2:8001/all ja ota arvo pvEnergyTotal
 
 server_port = 8001
 kwhmeter_url = "http://192.168.59.68:2222/REF"
 
 
-def get_next_update_time():
+def get_next_update_time() -> tuple[float, datetime.datetime]:
     # Lasketaan seuraava tasaminuutti + 30 sec
     now = datetime.datetime.now()
-    next_minute = (now.replace(second=0, microsecond=0) + datetime.timedelta(minutes=1) + datetime.timedelta(seconds=30))
+    next_minute = (now.replace(second=0, microsecond=0) +
+                   datetime.timedelta(minutes=1) +
+                   datetime.timedelta(seconds=30))
     # minutes = next_minute.minute
     # if minutes in [0, 15, 30, 45]:  # jätetään väliin vartit
     #    next_minute = next_minute + datetime.timedelta(minutes=1)
@@ -50,10 +53,10 @@ def get_next_update_time():
 
 
 last_plant_data: Union[PlantData, None] = None
-last_update_time: datetime = datetime.datetime.now()
+last_update_time: datetime.datetime = datetime.datetime.now()
 
 
-def get_hoymiles_data():
+def get_hoymiles_data() -> None:
     global last_plant_data
     global last_update_time
 
@@ -87,7 +90,7 @@ def get_hoymiles_data():
     last_update_time = update_time
 
 
-def handle_hoymiles():
+def handle_hoymiles() -> dict[str, int | float | None]:
     global last_pw_total
     if not last_plant_data:
         return {'pvPower': 0,
@@ -97,7 +100,7 @@ def handle_hoymiles():
                 }
     total = float(last_plant_data.total_production)
     today = float(last_plant_data.today_production)
-    if total < last_pw_total: # prevent morning problem
+    if total < last_pw_total:  # prevent morning problem
         logger.error(f"pvTotal error: {last_pw_total} {total}")
         total = None
     else:
@@ -110,7 +113,7 @@ def handle_hoymiles():
             }
 
 
-def handle_kwh_meter():
+def handle_kwh_meter() -> dict[str, float | str]:
     response = requests.get(kwhmeter_url)
     if response.status_code != 200:
         print("kwhmeter code: ", response.status_code)
@@ -125,7 +128,7 @@ def handle_kwh_meter():
     }
 
 
-def handle_kwh_meter_dummy():
+def handle_kwh_meter_dummy() -> dict[str, int]:
     return {
         'mainkW': 0,
         'mainkWh': 0,
@@ -135,7 +138,7 @@ def handle_kwh_meter_dummy():
 
 
 class MyHandler(BaseHTTPRequestHandler):
-    def get_png(self, t):
+    def get_png(self, t: int) -> None:
         self.send_response(200)
         self.send_header("Content-type", "image/png")
         self.end_headers()
@@ -143,25 +146,28 @@ class MyHandler(BaseHTTPRequestHandler):
         output = BytesIO()
         image.save(output, format="PNG")
         self.wfile.write(output.getvalue())
-        return t
 
-    def do_GET(self):
+    def do_GET(self) -> None:
         if self.path == "/GetPanelPng":
-            return self.get_png(1);
+            self.get_png(1)
+            return
         if self.path == "/GetPanelPng2":
-            return self.get_png(2);
+            self.get_png(2)
+            return
         if self.path == "/GetPanelPng3":
-            return self.get_png(3);
+            self.get_png(3)
+            return
         if self.path == "/favicon.ico":
             self.send_response(404)
             self.end_headers()
             return
+
         self.send_response(200)
         self.send_header('Content-type', 'application/json')
         self.send_header('Access-Control-Allow-Origin', '*')
         self.end_headers()
         if self.path == "/pannari":
-            data = handle_kwh_meter()
+            data: Any = handle_kwh_meter()
         elif self.path == "/hoymiles":
             data = handle_hoymiles()
         elif self.path == "/all":
@@ -181,9 +187,10 @@ class MyHandler(BaseHTTPRequestHandler):
 
 
 # def run(server_class=ThreadingHTTPServer, handler_class=MyHandler, port=server_port):
-def run(server_class=HTTPServer, handler_class=MyHandler, port=server_port):
+def run(port: int = server_port) -> None:
     server_address = ('', port)
-    httpd = server_class(server_address, handler_class)
+    handler_class: Callable[..., BaseHTTPRequestHandler] = MyHandler
+    httpd = HTTPServer(server_address, handler_class)
     print('Serving at port', port)
     get_hoymiles_data()
     # threading.Timer(get_next_update_time()[0], get_hoymiles_data).start()
