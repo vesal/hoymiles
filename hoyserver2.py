@@ -1,3 +1,6 @@
+import platform
+import re
+import subprocess
 import sys
 import datetime
 import logging
@@ -176,6 +179,11 @@ class MyHandler(BaseHTTPRequestHandler):
             data = {**data1, **data2}
         elif self.path == "/GetPanelData":
             data = get_panels_json(last_plant_data)
+        elif self.path.startswith("/mac?"):
+            from urllib.parse import urlparse, parse_qs
+            params = parse_qs(urlparse(self.path).query)
+            mac = params.get("mac", [""])[0]
+            data = handle_mac_lookup(mac) if mac else {"error": "MAC puuttuu"}
         else:
             data = {
                 'message': 'Tuntematon kutsu?'
@@ -184,6 +192,60 @@ class MyHandler(BaseHTTPRequestHandler):
         self.wfile.write(json_data.encode('utf-8'))
         print(data)
         logger.info(data)
+
+
+def handle_mac_lookup(mac):
+    mac = mac.upper().replace("-", ":")
+
+    if platform.system() == "Windows":
+        command = ["arp", "-a"]
+    else:
+        command = ["ip", "neigh", "show"]
+
+    try:
+        result = subprocess.run(
+            command,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=10
+        )
+
+        for line in result.stdout.splitlines():
+            parts = line.split()
+
+            if platform.system() == "Windows":
+                if len(parts) >= 3:
+                    ip = parts[0]
+                    found_mac = parts[1].upper().replace("-", ":")
+                else:
+                    continue
+            else:
+                if len(parts) >= 5:
+                    ip = parts[0]
+                    found_mac = parts[4].upper().replace("-", ":")
+                else:
+                    continue
+
+            if found_mac == mac:
+                return {
+                    "mac": mac,
+                    "ip": ip
+                }
+
+        return {
+            "mac": mac,
+            "ip": None,
+            "error": "IP-osoitetta ei löytynyt ARP-taulusta"
+        }
+
+    except Exception as e:
+        return {
+            "mac": mac,
+            "ip": None,
+            "error": str(e)
+        }
 
 
 # def run(server_class=ThreadingHTTPServer, handler_class=MyHandler, port=server_port):

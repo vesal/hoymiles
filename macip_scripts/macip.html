@@ -1,0 +1,1149 @@
+ <!doctype html>
+<html lang="fi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>macip.txt – laiteluettelo</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font: 15px/1.45 system-ui, sans-serif;
+      background: #f4f6f8;
+      color: #17212b;
+    }
+
+    body {
+      box-sizing: border-box;
+      display: flex;
+      height: 100vh;
+      height: 100dvh;
+      margin: 0;
+      padding: 1.5rem;
+    }
+
+    main {
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      min-width: 0;
+      min-height: 0;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    main > * {
+      flex-shrink: 0;
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 1.5rem;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: .75rem;
+      margin-bottom: 1rem;
+    }
+
+    button,
+    .file-button {
+      border: 1px solid #9aa8b5;
+      border-radius: 5px;
+      background: white;
+      color: inherit;
+      padding: .5rem .8rem;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: .5;
+    }
+
+    .file-button {
+      display: inline-block;
+    }
+
+    #fileInput {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      clip-path: inset(50%);
+    }
+
+    #fileName {
+      color: #526170;
+    }
+
+    #message {
+      min-height: 1.5em;
+      margin: .25rem 0 1rem;
+    }
+
+    #message.error {
+      color: #a32121;
+    }
+
+    .table-wrap {
+      flex: 1 1 0;
+      min-height: 6rem;
+      overflow: auto;
+      background: white;
+      border: 1px solid #cbd3da;
+      border-radius: 6px;
+    }
+
+    table {
+      width: 100%;
+      table-layout: fixed;
+      border-collapse: separate;
+      border-spacing: 0;
+      white-space: nowrap;
+      font-size: .9rem;
+    }
+
+    th {
+      position: relative;
+    }
+
+    th,
+    td {
+      padding: .3rem .5rem;
+      border-bottom: 1px solid #e1e6ea;
+      text-align: left;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    thead {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: #edf1f4;
+    }
+
+    th button {
+      border: 0;
+      background: transparent;
+      padding: 0;
+      font-weight: 700;
+    }
+
+    th .sort-button {
+      display: block;
+      width: 100%;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      text-align: left;
+    }
+
+    .filter-row th {
+      padding-top: .2rem;
+    }
+
+    .filter {
+      box-sizing: border-box;
+      width: 100%;
+      min-width: 0;
+      padding: .25rem;
+      border: 1px solid #b8c2cb;
+      border-radius: 4px;
+      font: inherit;
+      font-size: .9em;
+    }
+
+    .filter.invalid {
+      border-color: #b42318;
+      outline: 1px solid #b42318;
+    }
+
+    td input[type="text"] {
+      box-sizing: border-box;
+      width: 100%;
+      min-width: 0;
+      border: 1px solid transparent;
+      border-radius: 3px;
+      padding: .15rem .2rem;
+      background: transparent;
+      color: inherit;
+      font: inherit;
+    }
+
+    .resize-handle {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 8px;
+      height: 100%;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      cursor: col-resize;
+      touch-action: none;
+    }
+
+    .resize-handle:hover,
+    .resize-handle:focus-visible {
+      background: #527da5;
+      opacity: .65;
+      outline: none;
+    }
+
+    td input[type="text"]:focus {
+      border-color: #527da5;
+      outline: 1px solid #527da5;
+      background: white;
+    }
+
+    .hint {
+      margin-top: .8rem;
+      color: #526170;
+      font-size: .9rem;
+    }
+
+    .selection-cell {
+      text-align: center;
+    }
+
+    dialog {
+      max-width: min(28rem, calc(100% - 3rem));
+      border: 1px solid #9aa8b5;
+      border-radius: 6px;
+      padding: 1.25rem;
+    }
+
+    dialog::backdrop {
+      background: rgba(0, 0, 0, .35);
+    }
+
+    .device-form label {
+      display: block;
+      margin: .75rem 0;
+    }
+
+    .device-form input {
+      box-sizing: border-box;
+      display: block;
+      width: 100%;
+      margin-top: .2rem;
+      padding: .35rem;
+      font: inherit;
+    }
+
+    .device-form .form-error {
+      color: #a32121;
+      min-height: 1.5em;
+    }
+
+    .device-form .form-actions {
+      display: flex;
+      gap: .75rem;
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: .75rem;
+      }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Verkon laiteluettelo</h1>
+  <div class="toolbar">
+    <label class="file-button" for="fileInput">Avaa macip.txt</label>
+    <input id="fileInput" type="file" accept=".txt,text/plain">
+    <button id="saveButton" type="button" disabled>Tallenna nimellä…</button>
+    <button id="addButton" type="button" disabled>Lisää laite</button>
+    <button id="deleteButton" type="button" disabled>Poista valitut</button>
+    <button id="reloadButton" type="button" hidden>Lataa palvelimelta</button>
+    <button id="updateButton" type="button" hidden>Päivitä reitittimiltä</button>
+    <span id="fileName">Ei tiedostoa avattuna</span>
+    <span id="rowCount"></span>
+  </div>
+  <p id="message" role="status" aria-live="polite">Avaa macip.txt aloittaaksesi.</p>
+  <div class="table-wrap">
+    <table>
+      <colgroup id="columnWidths"></colgroup>
+      <thead>
+      <tr id="headers"></tr>
+      <tr id="filters" class="filter-row"></tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+  <p class="hint">Valitse rivejä ensimmäisen sarakkeen ruuduilla. Otsikon ruutu valitsee näkyvät rivit ja suodatinrivin ruutu näyttää vain valitut. Poisto tallentuu vasta Tallenna-painikkeella. Lajittele klikkaamalla otsikkoa ja säädä leveyttä vetämällä otsikon oikeaa reunaa. Suodattimet tukevat regexiä ja vertailuja, esimerkiksi =arvo, !teksti ja &gt;2&lt;4. Lisätietoja käyttöohjeessa.</p>
+</main>
+<dialog id="addDeviceDialog" aria-labelledby="addDeviceTitle">
+  <form id="addDeviceForm" class="device-form">
+    <h2 id="addDeviceTitle">Lisää laite</h2>
+    <label>MAC-osoite <input id="newMac" type="text" required autocomplete="off"></label>
+    <label>IP-osoite <input id="newIp" type="text" required autocomplete="off"></label>
+    <label>Oma nimi <input id="newName" type="text" autocomplete="off"></label>
+    <p id="addDeviceError" class="form-error" role="alert"></p>
+    <div class="form-actions">
+      <button type="submit">Lisää</button>
+      <button id="cancelAddButton" type="button">Peruuta</button>
+    </div>
+  </form>
+</dialog>
+<script>
+  "use strict";
+
+  const fileInput = document.getElementById("fileInput");
+  const openFileLabel = document.querySelector(".file-button");
+  const saveButton = document.getElementById("saveButton");
+  const addButton = document.getElementById("addButton");
+  const addDeviceDialog = document.getElementById("addDeviceDialog");
+  const addDeviceForm = document.getElementById("addDeviceForm");
+  const newMac = document.getElementById("newMac");
+  const newIp = document.getElementById("newIp");
+  const newName = document.getElementById("newName");
+  const addDeviceError = document.getElementById("addDeviceError");
+  const cancelAddButton = document.getElementById("cancelAddButton");
+  const deleteButton = document.getElementById("deleteButton");
+  const reloadButton = document.getElementById("reloadButton");
+  const updateButton = document.getElementById("updateButton");
+  const fileName = document.getElementById("fileName");
+  const message = document.getElementById("message");
+  const rowCount = document.getElementById("rowCount");
+  const headerRow = document.getElementById("headers");
+  const filterRow = document.getElementById("filters");
+  const tableBody = document.getElementById("rows");
+  const columnGroup = document.getElementById("columnWidths");
+  const ownNameColumn = "Oma nimi";
+  const extraColumns = ["Yhteys", "Signaali", "Tukiasema"];
+  const defaultColumnWidths = {
+    "MAC": 135,
+    "IP": 120,
+    "Nimi": 120,
+    "Oma nimi": 190,
+    "Tila": 72,
+    "Viimeksi nähty": 155,
+    "Yhteys": 95,
+    "Signaali": 68,
+    "Tukiasema": 135
+  };
+  const minColumnWidth = 48;
+  const selectionColumnWidth = 44;
+  const widthStorageKey = "macipColumnWidths";
+  const fileHandleDatabase = "macip-editor";
+  const fileHandleStore = "settings";
+  const fileHandleKey = "lastFileHandle";
+  const collator = new Intl.Collator("fi", {numeric: true, sensitivity: "base"});
+  const localServer = location.protocol === "http:" && location.port === "8765"
+    && ["localhost", "127.0.0.1"].includes(location.hostname);
+
+  const filterEscape = "\u001F";
+  const filterEscapable = "!<=>\\";
+  const filterEncodeRe = new RegExp("\\\\([" + filterEscapable + "\\])", "g");
+  const filterDecodeRe = new RegExp(filterEscape + "(\\d)", "g");
+  const filterNumberRe = /^-?\d+([.,:]\d+)?([eE]-?\d+)?$/;
+  const filterDoubleRe = /^[-+]?\d+([.,:]\d+)?([eE]-?\d+)?$/;
+  const filterIntRe = /^[-+]?\d+$/;
+  const filterOperators = {
+    "!==": {func: (a, b) => a !== b, params: 2},
+    "!\\N": {func: a => !filterIntRe.test("" + a), params: 1},
+    "!\\D": {func: a => !filterDoubleRe.test("" + a), params: 1},
+    "\\N": {func: a => filterIntRe.test("" + a), params: 1},
+    "\\D": {func: a => filterDoubleRe.test("" + a), params: 1},
+    "!=": {func: (a, b) => a !== b, params: 2},
+    "<=": {func: (a, b) => a <= b, params: 2},
+    "==": {func: (a, b) => a === b, params: 2},
+    "!!": {func: (a, b) => a == b, params: 2},
+    ">=": {func: (a, b) => a >= b, params: 2},
+    "<": {func: (a, b) => a < b, params: 2},
+    "=": {func: (a, b) => a === b, params: 2},
+    ">": {func: (a, b) => a > b, params: 2},
+    "!": {func: (a, b) => a !== b, params: 2}
+  };
+  const filterOperatorKeys = Object.keys(filterOperators);
+
+  function filterCompareValue(value) {
+    if (filterNumberRe.test(value)) {
+      const number = parseFloat(value.replace(",", ".").replace(":", "."));
+      if (!Number.isNaN(number)) return [number, false];
+    }
+    return [value.toLowerCase(), true];
+  }
+
+  function ipv4Value(value) {
+    const parts = value.split(".");
+    if (parts.length !== 4 || !parts.every(part =>
+      /^(0|[1-9]\d{0,2})$/.test(part) && Number(part) <= 255
+    )) return null;
+    return parts.reduce((number, part) => number * 256 + Number(part), 0);
+  }
+
+  class ComparatorFilter {
+    constructor(filter, compareIpv4 = false) {
+      filter = filter.replace(filterEncodeRe, (_, character) =>
+        filterEscape + String(filterEscapable.indexOf(character)));
+      this.compareIpv4 = compareIpv4;
+      this.negate = filter.endsWith("!");
+      if (this.negate) filter = filter.slice(0, -1);
+      this.items = [];
+      if (filter === "") {
+        this.items.push({func: filterOperators["="].func, value: "", strValue: "", isStr: true});
+        return;
+      }
+
+      let index = 0;
+      while (index < filter.length) {
+        let func = null;
+        let operator = "";
+        let params = 2;
+        for (const candidate of filterOperatorKeys) {
+          if (filter.startsWith(candidate, index)) {
+            operator = candidate;
+            ({func, params} = filterOperators[candidate]);
+            index += candidate.length;
+            break;
+          }
+        }
+        let next = params < 2 ? index : filter.length;
+        if (params >= 2) {
+          for (const candidate of filterOperatorKeys) {
+            const found = filter.indexOf(candidate, index);
+            if (found !== -1 && found < next) next = found;
+          }
+        }
+        const value = filter.slice(index, next).replace(filterDecodeRe,
+          (_, code) => filterEscapable[Number(code)] ?? "");
+        const [compared, isStr] = filterCompareValue(value);
+        if (value === "" && !func) func = filterOperators["="].func;
+        if (!func || operator === "!" || operator === "!!") {
+          let pattern = value;
+          if (value.endsWith("\\") && !value.endsWith("\\\\")) pattern += "\\";
+          const regex = new RegExp(pattern, "i");
+          func = operator === "!" ? a => !regex.test("" + a) : a => regex.test("" + a);
+        }
+        const ipv4 = compareIpv4 && ["<", "<=", ">", ">="].includes(operator)
+          ? ipv4Value(value) : null;
+        this.items.push({func, value: compared, strValue: value.toLowerCase(), isStr, ipv4});
+        index = next;
+      }
+    }
+
+    test(value) {
+      const [number, forceString] = filterCompareValue(value);
+      const lowercase = value.toLowerCase();
+      const ipv4 = this.compareIpv4 ? ipv4Value(value) : null;
+      let result = true;
+      for (const item of this.items) {
+        if (value === "" && !item.isStr) {
+          result = false;
+          break;
+        }
+        let compared = item.value;
+        let current = number;
+        if (ipv4 !== null && item.ipv4 != null) {
+          current = ipv4;
+          compared = item.ipv4;
+        } else if (forceString) compared = item.strValue;
+        else if (item.isStr) current = lowercase;
+        if (!item.func(current, compared)) {
+          result = false;
+          break;
+        }
+      }
+      return this.negate ? !result : result;
+    }
+  }
+
+  let headers = [];
+  let devices = [];
+  let filters = [];
+  let columnWidths = {};
+  let sortColumn = -1;
+  let sortDirection = 1;
+  let loadedFileName = "macip.txt";
+  let dirty = false;
+  let rememberedFileHandle = null;
+  let serverRevision = null;
+  let busy = false;
+  let selectedDevices = new Set();
+  let selectedOnly = false;
+  let visibleDevices = [];
+
+  function setBusy(value) {
+    busy = value;
+    fileInput.disabled = value;
+    saveButton.disabled = value || !headers.length;
+    addButton.disabled = value || !headers.length;
+    deleteButton.disabled = value || selectedDevices.size === 0;
+    reloadButton.disabled = value;
+    updateButton.disabled = value;
+    tableBody.querySelectorAll("input").forEach(input => { input.disabled = value; });
+    const selectAll = headerRow.querySelector(".select-all");
+    const selectionFilter = filterRow.querySelector(".selection-filter");
+    if (selectAll) selectAll.disabled = value || visibleDevices.length === 0;
+    if (selectionFilter) selectionFilter.disabled = value;
+  }
+
+  function markDirty() {
+    dirty = true;
+    saveButton.textContent = serverRevision === null ? "Tallenna nimellä… *" : "Tallenna *";
+  }
+
+  async function serverRequest(path, payload) {
+    const options = payload === undefined ? {cache: "no-store"} : {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(payload)
+    };
+    const response = await fetch(path, options);
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || `HTTP ${response.status}`);
+    return result;
+  }
+
+  function loadServerResult(result) {
+    loadText(result.content, result.name);
+    serverRevision = result.revision;
+    saveButton.textContent = "Tallenna";
+  }
+
+  function showUpdateSummary(summaries, failures) {
+    const sections = [];
+    for (const summary of summaries) {
+      const lines = [];
+      for (const device of summary.new_devices) {
+        const label = device.name && !["--", "0"].includes(device.name)
+          ? `${device.name} (${device.mac})` : device.mac;
+        lines.push(`Uusi: ${label}, IP ${device.ip || "--"}`);
+      }
+      for (const device of summary.ip_changes) {
+        const label = device.name && !["--", "0"].includes(device.name)
+          ? `${device.name} (${device.mac})` : device.mac;
+        lines.push(`IP: ${label}: ${device.old_ip || "--"} → ${device.new_ip || "--"}`);
+      }
+      if (lines.length) sections.push(`${summary.router}\n${lines.join("\n")}`);
+    }
+    const messages = [];
+    if (sections.length) messages.push(`Reititinpäivityksen muutokset:\n\n${sections.join("\n\n")}`);
+    if (failures.length) {
+      messages.push(`Epäonnistuneet päivitykset:\n\n${failures.map(
+        failure => `${failure.command}: ${failure.error}`
+      ).join("\n\n")}`);
+    }
+    if (messages.length) window.alert(messages.join("\n\n"));
+  }
+
+  async function reloadFromServer() {
+    if (dirty && !confirm("Hylätäänkö tallentamattomat muutokset?")) return;
+    setBusy(true);
+    try {
+      loadServerResult(await serverRequest("/api/macip"));
+    } catch (error) {
+      showMessage(`Tiedoston lataaminen epäonnistui: ${error.message}`, true);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function updateRouters() {
+    if (dirty) {
+      showMessage("Tallenna tai hylkää muutokset ennen reititinpäivitystä.", true);
+      return;
+    }
+    if (serverRevision === null) {
+      showMessage("Lataa palvelimen tiedosto ennen reititinpäivitystä.", true);
+      return;
+    }
+    setBusy(true);
+    showMessage("Päivitetään reitittimiltä. Odota…");
+    try {
+      const result = await serverRequest("/api/update", {});
+      loadServerResult(result);
+      if (!Array.isArray(result.summaries) || !Array.isArray(result.missing_summaries)
+          || !Array.isArray(result.failures)) {
+        throw new Error("Palvelin ei palauttanut reititinpäivityksen yhteenvetoa.");
+      }
+      showUpdateSummary(result.summaries, result.failures);
+      const warnings = [];
+      if (result.failures.length) {
+        warnings.push(`Epäonnistui: ${result.failures.map(failure => failure.command).join(", ")}.`);
+      }
+      if (result.missing_summaries.length) {
+        warnings.push(`Yhteenveto puuttuu: ${result.missing_summaries.join(", ")}.`);
+      }
+      showMessage(warnings.length ? `Päivitys valmis. ${warnings.join(" ")}` : "Reititinpäivitys valmis.",
+        warnings.length > 0);
+    } catch (error) {
+      showMessage(`Reititinpäivitys epäonnistui: ${error.message} Lataa palvelimen tiedosto uudelleen.`, true);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function openSettingsDatabase() {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(fileHandleDatabase, 1);
+      request.onupgradeneeded = () => {
+        request.result.createObjectStore(fileHandleStore);
+      };
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  async function getRememberedFileHandle() {
+    const database = await openSettingsDatabase();
+    return new Promise((resolve, reject) => {
+      const transaction = database.transaction(fileHandleStore, "readonly");
+      const request = transaction.objectStore(fileHandleStore).get(fileHandleKey);
+      request.onsuccess = () => resolve(request.result || null);
+      request.onerror = () => reject(request.error);
+      transaction.oncomplete = () => database.close();
+      transaction.onerror = () => {
+        database.close();
+        reject(transaction.error);
+      };
+    });
+  }
+
+  async function rememberFileHandle(handle) {
+    const database = await openSettingsDatabase();
+    return new Promise((resolve, reject) => {
+      const transaction = database.transaction(fileHandleStore, "readwrite");
+      transaction.objectStore(fileHandleStore).put(handle, fileHandleKey);
+      transaction.oncomplete = () => {
+        database.close();
+        resolve();
+      };
+      transaction.onerror = () => {
+        database.close();
+        reject(transaction.error);
+      };
+      transaction.onabort = () => {
+        database.close();
+        reject(transaction.error || new Error("Tiedoston käyttöoikeuden tallennus keskeytyi."));
+      };
+    });
+  }
+
+  async function loadFromHandle(handle) {
+    const permission = await handle.queryPermission({mode: "read"});
+    if (permission !== "granted") {
+      showMessage("Selain ei myöntänyt tiedoston lukuoikeutta. Avaa tiedosto uudelleen valintapainikkeella.", true);
+      return;
+    }
+    const file = await handle.getFile();
+    loadText(await file.text(), file.name);
+    rememberedFileHandle = handle;
+  }
+
+  function showMessage(text, isError = false) {
+    message.textContent = text;
+    message.classList.toggle("error", isError);
+  }
+
+  function parseInventory(text) {
+    const lines = text.replace(/^\uFEFF/, "").split(/\r?\n/).filter(line => line.trim());
+    if (!lines.length || !lines[0].includes("|")) {
+      throw new Error("Tiedostosta ei löytynyt otsikkoriviä tai sarake-erotinta '|'.");
+    }
+
+    const parsedHeaders = lines[0].split("|").map(value => value.trim());
+    if (parsedHeaders[0]?.toLowerCase() !== "mac" || !parsedHeaders.includes(ownNameColumn)) {
+      throw new Error("Tiedoston otsikoissa pitää olla MAC- ja Oma nimi -sarakkeet.");
+    }
+
+    const parsedDevices = [];
+    for (let index = 1; index < lines.length; index += 1) {
+      const values = lines[index].split("|").map(value => value.trim());
+      if (values.length !== parsedHeaders.length) {
+        throw new Error(`Rivillä ${index + 1} on eri määrä sarakkeita kuin otsikossa.`);
+      }
+      parsedDevices.push(values);
+    }
+    for (const column of extraColumns) {
+      if (!parsedHeaders.includes(column)) {
+        parsedHeaders.push(column);
+        parsedDevices.forEach(values => values.push(""));
+      }
+    }
+    return {headers: parsedHeaders, devices: parsedDevices};
+  }
+
+  function getColumnWidth(header) {
+    const savedWidth = columnWidths[header];
+    if (Number.isFinite(savedWidth) && savedWidth >= minColumnWidth && savedWidth <= 2000) {
+      return Math.round(savedWidth);
+    }
+    const defaultWidth = Object.entries(defaultColumnWidths)
+      .find(([name]) => name.toLocaleLowerCase("fi") === header.toLocaleLowerCase("fi"))?.[1];
+    return defaultWidth || 140;
+  }
+
+  function updateTableWidth() {
+    const totalWidth = headers.reduce((total, header) => total + getColumnWidth(header), selectionColumnWidth);
+    headerRow.closest("table").style.width = `${totalWidth}px`;
+  }
+
+  function saveColumnWidths() {
+    try {
+      localStorage.setItem(widthStorageKey, JSON.stringify(columnWidths));
+    } catch (error) {
+      showMessage(`Sarakkeiden leveyksien tallennus epäonnistui: ${error.message}`, true);
+    }
+  }
+
+  function resizeColumn(index, width) {
+    const boundedWidth = Math.round(Math.max(minColumnWidth, Math.min(2000, width)));
+    columnGroup.children[index + 1].style.width = `${boundedWidth}px`;
+    columnWidths[headers[index]] = boundedWidth;
+    updateTableWidth();
+  }
+
+  function renderHeaders() {
+    headerRow.replaceChildren();
+    filterRow.replaceChildren();
+    columnGroup.replaceChildren();
+
+    const selectionColumn = document.createElement("col");
+    selectionColumn.style.width = `${selectionColumnWidth}px`;
+    columnGroup.append(selectionColumn);
+
+    const selectionHeading = document.createElement("th");
+    selectionHeading.scope = "col";
+    selectionHeading.className = "selection-cell";
+    const selectAll = document.createElement("input");
+    selectAll.type = "checkbox";
+    selectAll.className = "select-all";
+    selectAll.title = "Valitse näkyvät rivit";
+    selectAll.setAttribute("aria-label", "Valitse tai poista valinta näkyviltä riveiltä");
+    selectAll.addEventListener("change", () => {
+      for (const {values} of visibleDevices) {
+        if (selectAll.checked) selectedDevices.add(values);
+        else selectedDevices.delete(values);
+      }
+      renderRows();
+    });
+    selectionHeading.append(selectAll);
+    headerRow.append(selectionHeading);
+
+    const selectionFilterCell = document.createElement("th");
+    selectionFilterCell.className = "selection-cell";
+    const selectionFilter = document.createElement("input");
+    selectionFilter.type = "checkbox";
+    selectionFilter.className = "selection-filter";
+    selectionFilter.checked = selectedOnly;
+    selectionFilter.title = "Näytä vain valitut rivit";
+    selectionFilter.setAttribute("aria-label", "Näytä vain valitut rivit");
+    selectionFilter.addEventListener("change", () => {
+      selectedOnly = selectionFilter.checked;
+      renderRows();
+    });
+    selectionFilterCell.append(selectionFilter);
+    filterRow.append(selectionFilterCell);
+
+    headers.forEach((header, index) => {
+      const column = document.createElement("col");
+      column.style.width = `${getColumnWidth(header)}px`;
+      columnGroup.append(column);
+
+      const heading = document.createElement("th");
+      heading.scope = "col";
+      const sortButton = document.createElement("button");
+      sortButton.type = "button";
+      sortButton.className = "sort-button";
+      sortButton.textContent = header;
+      sortButton.title = `Lajittele sarakkeen ${header} mukaan`;
+      sortButton.addEventListener("click", () => {
+        if (sortColumn === index) {
+          sortDirection *= -1;
+        } else {
+          sortColumn = index;
+          sortDirection = 1;
+        }
+        renderRows();
+      });
+      heading.append(sortButton);
+
+      const resizeHandle = document.createElement("button");
+      resizeHandle.type = "button";
+      resizeHandle.className = "resize-handle";
+      resizeHandle.title = `Muuta sarakkeen ${header} leveyttä`;
+      resizeHandle.setAttribute("aria-label", `Muuta sarakkeen ${header} leveyttä`);
+      resizeHandle.addEventListener("pointerdown", event => {
+        event.preventDefault();
+        const startX = event.clientX;
+        const startWidth = column.getBoundingClientRect().width;
+        resizeHandle.setPointerCapture(event.pointerId);
+        resizeHandle.onpointermove = moveEvent => {
+          resizeColumn(index, startWidth + moveEvent.clientX - startX);
+        };
+        resizeHandle.onpointerup = resizeHandle.onpointercancel = endEvent => {
+          resizeColumn(index, startWidth + endEvent.clientX - startX);
+          resizeHandle.onpointermove = null;
+          resizeHandle.onpointerup = null;
+          resizeHandle.onpointercancel = null;
+          saveColumnWidths();
+        };
+      });
+      resizeHandle.addEventListener("keydown", event => {
+        if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+        event.preventDefault();
+        resizeColumn(index, getColumnWidth(header) + (event.key === "ArrowRight" ? 10 : -10));
+        saveColumnWidths();
+      });
+      heading.append(resizeHandle);
+      headerRow.append(heading);
+
+      const filterCell = document.createElement("th");
+      const filter = document.createElement("input");
+      filter.type = "search";
+      filter.className = "filter";
+      filter.placeholder = "";
+      filter.setAttribute("aria-label", `Suodatin: ${header}`);
+      filter.addEventListener("input", () => {
+        filters[index] = filter.value;
+        renderRows();
+      });
+      filterCell.append(filter);
+      filterRow.append(filterCell);
+    });
+    updateTableWidth();
+  }
+
+  function renderRows() {
+    const expressions = [];
+    let invalidFilter = false;
+    for (let index = 0; index < headers.length; index += 1) {
+      const input = filterRow.children[index + 1]?.querySelector("input");
+      const expressionText = filters[index] || "";
+      try {
+        expressions[index] = expressionText ? new ComparatorFilter(expressionText, headers[index] === "IP") : null;
+        input?.classList.remove("invalid");
+        input?.removeAttribute("aria-invalid");
+      } catch {
+        expressions[index] = null;
+        invalidFilter = true;
+        input?.classList.add("invalid");
+        input?.setAttribute("aria-invalid", "true");
+      }
+    }
+
+    visibleDevices = devices
+      .map((values, originalIndex) => ({values, originalIndex}))
+      .filter(({values}) => (!selectedOnly || selectedDevices.has(values))
+        && expressions.every((expression, index) =>
+          !expression || expression.test(values[index] || "")
+        ));
+
+    if (sortColumn >= 0) {
+      visibleDevices.sort((left, right) =>
+        collator.compare(left.values[sortColumn] || "", right.values[sortColumn] || "")
+        * sortDirection
+      );
+    }
+
+    tableBody.replaceChildren();
+    const ownNameIndex = headers.indexOf(ownNameColumn);
+    for (const {values, originalIndex} of visibleDevices) {
+      const row = document.createElement("tr");
+      const selectionCell = document.createElement("td");
+      selectionCell.className = "selection-cell";
+      const selection = document.createElement("input");
+      selection.type = "checkbox";
+      selection.checked = selectedDevices.has(values);
+      selection.disabled = busy;
+      selection.setAttribute("aria-label", `Valitse laite ${values[0]}`);
+      selection.addEventListener("change", () => {
+        if (selection.checked) selectedDevices.add(values);
+        else selectedDevices.delete(values);
+        renderRows();
+      });
+      selectionCell.append(selection);
+      row.append(selectionCell);
+      values.forEach((value, columnIndex) => {
+        const cell = document.createElement("td");
+        if (columnIndex === ownNameIndex) {
+          const input = document.createElement("input");
+          input.type = "text";
+          input.value = value;
+          input.disabled = busy;
+          input.setAttribute("aria-label", `${values[0]}: oma nimi`);
+          input.addEventListener("input", () => {
+            devices[originalIndex][ownNameIndex] = input.value;
+            markDirty();
+          });
+          cell.append(input);
+        } else {
+          cell.textContent = value;
+        }
+        row.append(cell);
+      });
+      tableBody.append(row);
+    }
+
+    const selectedVisible = visibleDevices.filter(({values}) => selectedDevices.has(values)).length;
+    const selectAll = headerRow.querySelector(".select-all");
+    selectAll.checked = visibleDevices.length > 0 && selectedVisible === visibleDevices.length;
+    selectAll.indeterminate = selectedVisible > 0 && selectedVisible < visibleDevices.length;
+    selectAll.disabled = busy || visibleDevices.length === 0;
+    deleteButton.disabled = busy || selectedDevices.size === 0;
+    rowCount.textContent = `${visibleDevices.length} / ${devices.length} laitetta, ${selectedDevices.size} valittu`;
+    if (invalidFilter) {
+      showMessage("Virheellinen suodatin tai regex (punainen kenttä).", true);
+    } else if (devices.length) {
+      showMessage(dirty ? "Muutoksia ei ole vielä tallennettu." : "Luettelo ladattu.");
+    }
+  }
+
+  function addDevice() {
+    const ipIndex = headers.indexOf("IP");
+    if (ipIndex < 0) {
+      showMessage("Laitetta ei voi lisätä: tiedostosta puuttuu IP-sarake.", true);
+      return;
+    }
+
+    addDeviceForm.reset();
+    addDeviceError.textContent = "";
+    addDeviceDialog.showModal();
+    newMac.focus();
+  }
+
+  function submitDevice(event) {
+    event.preventDefault();
+    const mac = newMac.value.trim().toLowerCase();
+    if (!/^(?:[0-9a-f]{12}|[0-9a-f]{2}(?::[0-9a-f]{2}){5}|[0-9a-f]{2}(?:-[0-9a-f]{2}){5})$/.test(mac)) {
+      addDeviceError.textContent = "Virheellinen MAC-osoite. Anna esimerkiksi 00:11:22:33:44:55.";
+      newMac.focus();
+      return;
+    }
+    const normalizedMac = mac.replace(/[:-]/g, "");
+    if (devices.some(row => row[0].toLowerCase().replace(/[:-]/g, "") === normalizedMac)) {
+      addDeviceError.textContent = "Tämä MAC-osoite on jo luettelossa.";
+      newMac.focus();
+      return;
+    }
+
+    const ip = newIp.value.trim();
+    const validIpv4 = ipv4Value(ip) !== null;
+    let validIpv6 = false;
+    if (ip.includes(":") && /^[0-9a-f:.]+$/i.test(ip)) {
+      try {
+        validIpv6 = new URL(`http://[${ip}]/`).hostname.startsWith("[");
+      } catch {
+        validIpv6 = false;
+      }
+    }
+    if (!validIpv4 && !validIpv6) {
+      addDeviceError.textContent = "Virheellinen IP-osoite.";
+      newIp.focus();
+      return;
+    }
+    const name = newName.value.trim();
+    if (/[|\r\n]/.test(name)) {
+      addDeviceError.textContent = "Nimi ei voi sisältää erotinta '|' tai rivinvaihtoa.";
+      newName.focus();
+      return;
+    }
+
+    const row = headers.map(() => "");
+    row[0] = normalizedMac.match(/.{2}/g).join(":");
+    row[headers.indexOf("IP")] = ip;
+    row[headers.indexOf(ownNameColumn)] = name;
+    devices.push(row);
+    markDirty();
+    renderRows();
+    addDeviceDialog.close();
+    showMessage("Laite lisätty. Jos riviä ei näy, tarkista suodattimet. Muista tallentaa.");
+  }
+
+  function deleteSelected() {
+    const count = selectedDevices.size;
+    if (!count) return;
+    const hiddenCount = count - visibleDevices.filter(({values}) => selectedDevices.has(values)).length;
+    const hiddenNote = hiddenCount ? ` Näistä ${hiddenCount} ei näy nykyisillä suodattimilla.` : "";
+    if (!window.confirm(`Poistetaanko ${count} valittua laitetta?${hiddenNote} Muutos tallentuu vasta Tallenna-painikkeella.`)) return;
+    devices = devices.filter(values => !selectedDevices.has(values));
+    selectedDevices.clear();
+    markDirty();
+    renderRows();
+    showMessage(`${count} laitetta poistettu. Muista tallentaa.`);
+  }
+
+  function loadText(text, name) {
+    const parsed = parseInventory(text);
+    serverRevision = null;
+    try {
+      const storedWidths = JSON.parse(localStorage.getItem(widthStorageKey) || "{}");
+      columnWidths = storedWidths && typeof storedWidths === "object" && !Array.isArray(storedWidths)
+        ? storedWidths
+        : {};
+    } catch (error) {
+      columnWidths = {};
+      showMessage(`Sarakkeiden leveyksiä ei voitu lukea selaimesta: ${error.message}`, true);
+    }
+    headers = parsed.headers;
+    devices = parsed.devices;
+    selectedDevices = new Set();
+    selectedOnly = false;
+    filters = headers.map(() => "");
+    sortColumn = headers.findIndex(header => header.toLowerCase() === "ip");
+    sortDirection = 1;
+    loadedFileName = name || "macip.txt";
+    fileName.textContent = loadedFileName;
+    dirty = false;
+    saveButton.disabled = false;
+    addButton.disabled = busy;
+    saveButton.textContent = "Tallenna nimellä…";
+    renderHeaders();
+    renderRows();
+  }
+
+  function formatInventory() {
+    if (devices.some(row => row.some(value => /[|\r\n]/.test(value)))) {
+      throw new Error("Sarakkeen arvo ei voi sisältää erotinta '|' tai rivinvaihtoa.");
+    }
+
+    const rows = [headers, ...devices];
+    const widths = headers.map((_, column) =>
+      Math.max(...rows.map(row => (row[column] || "").length))
+    );
+    return rows.map(row =>
+      row.map((value, column) => (value || "").padEnd(widths[column])).join(" | ")
+    ).join("\n") + "\n";
+  }
+
+  async function saveAs() {
+    let content;
+    try {
+      content = formatInventory();
+    } catch (error) {
+      showMessage(error.message, true);
+      return;
+    }
+
+    if (serverRevision !== null) {
+      setBusy(true);
+      try {
+        const result = await serverRequest("/api/macip", {content, revision: serverRevision});
+        serverRevision = result.revision;
+        dirty = false;
+        saveButton.textContent = "Tallenna";
+        showMessage("Tiedosto tallennettu.");
+      } catch (error) {
+        showMessage(`Tallennus epäonnistui: ${error.message}`, true);
+      } finally {
+        setBusy(false);
+      }
+      return;
+    }
+
+    if (window.showSaveFilePicker) {
+      try {
+        const handle = await window.showSaveFilePicker({
+          suggestedName: loadedFileName,
+          types: [{
+            description: "Tekstitiedosto",
+            accept: {"text/plain": [".txt"]}
+          }]
+        });
+        const writable = await handle.createWritable();
+        await writable.write(new Blob([content], {type: "text/plain;charset=utf-8"}));
+        await writable.close();
+        loadedFileName = handle.name;
+        fileName.textContent = loadedFileName;
+        dirty = false;
+        saveButton.textContent = "Tallenna nimellä…";
+        showMessage("Tiedosto tallennettu.");
+      } catch (error) {
+        if (error.name !== "AbortError") {
+          showMessage(`Tallennus epäonnistui: ${error.message}`, true);
+        }
+      }
+      return;
+    }
+
+    const blob = new Blob([content], {type: "text/plain;charset=utf-8"});
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = loadedFileName;
+    link.click();
+    URL.revokeObjectURL(url);
+    dirty = false;
+    saveButton.textContent = "Tallenna nimellä…";
+    showMessage("Tallennus käynnistyi latauksena. Valitse selaimen latausasetuksista tallennuspaikka.");
+  }
+
+  fileInput.addEventListener("change", async () => {
+    const file = fileInput.files?.[0];
+    if (!file) return;
+    if (dirty && !confirm("Hylätäänkö tallentamattomat muutokset?")) {
+      fileInput.value = "";
+      return;
+    }
+    try {
+      loadText(await file.text(), file.name);
+    } catch (error) {
+      showMessage(`Tiedoston avaaminen epäonnistui: ${error.message}`, true);
+    }
+    fileInput.value = "";
+  });
+
+  saveButton.addEventListener("click", saveAs);
+  addButton.addEventListener("click", addDevice);
+  addDeviceForm.addEventListener("submit", submitDevice);
+  cancelAddButton.addEventListener("click", () => addDeviceDialog.close());
+  deleteButton.addEventListener("click", deleteSelected);
+  reloadButton.addEventListener("click", reloadFromServer);
+  updateButton.addEventListener("click", updateRouters);
+
+  if (localServer) {
+    reloadButton.hidden = false;
+    updateButton.hidden = false;
+    reloadFromServer();
+  } else if (window.showOpenFilePicker && window.indexedDB) {
+    openFileLabel.addEventListener("click", async event => {
+      event.preventDefault();
+      if (busy || (dirty && !confirm("Hylätäänkö tallentamattomat muutokset?"))) return;
+      try {
+        const [handle] = await window.showOpenFilePicker({
+          multiple: false,
+          types: [{
+            description: "Tekstitiedosto",
+            accept: {"text/plain": [".txt"]}
+          }]
+        });
+        await loadFromHandle(handle);
+        await rememberFileHandle(handle);
+        rememberedFileHandle = handle;
+      } catch (error) {
+        if (error.name !== "AbortError") {
+          showMessage(`Tiedoston avaaminen tai muistaminen epäonnistui: ${error.message}`, true);
+        }
+      }
+    });
+    getRememberedFileHandle().then(async handle => {
+      rememberedFileHandle = handle;
+      if (!handle) return;
+
+      const permission = await handle.queryPermission({mode: "read"});
+      if (permission === "granted") {
+        await loadFromHandle(handle);
+      } else {
+        showMessage("Viimeksi käytetty tiedosto on muistissa. Selain vaatii tiedoston valinnan uudelleen.");
+      }
+    }).catch(error => {
+      showMessage(`Muistettua tiedostoa ei voitu avata: ${error.message}`, true);
+    });
+  }
+</script>
+</body>
+</html>

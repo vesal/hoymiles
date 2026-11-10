@@ -1,0 +1,76 @@
+Paikallisen macip-editorin käyttö
+
+Käynnistä macip.bat. Pidä palvelimen ikkuna auki editorin käytön ajan.
+Palvelin näyttää automaattisesti samassa kansiossa olevan macip.txt-tiedoston.
+Tallenna-painike kirjoittaa muutokset siihen. Jos tiedosto on muuttunut
+editorin lataamisen jälkeen, lataa se uudelleen ennen tallentamista.
+
+Lisää laite -painike avaa lomakkeen MAC- ja IP-osoitteelle sekä omalle nimelle.
+Rivien valintaruuduilla
+voi valita laitteita; otsikkorivin ruutu valitsee tai poistaa valinnan
+näkyviltä riveiltä. Suodatinrivin ruutu näyttää vain valitut laitteet.
+Poista valitut poistaa myös suodatuksen piilottamat valinnat ja kertoo niistä
+vahvistuksessa. Lisäykset ja poistot kirjoitetaan tiedostoon vasta tallennettaessa.
+Taulukko täyttää ikkunan vapaan tilan, ja otsikko- ja suodatinrivit pysyvät
+näkyvissä taulukkoa vieritettäessä.
+
+Suodattimessa tavallinen teksti on kirjainkoosta riippumaton säännöllinen
+lauseke, esimerkiksi kissa|koira. Tyhjä suodatin näyttää kaikki rivit.
+Vertailuilla voi rajata tuloksia esimerkiksi näin:
+
+  =arvo     täsmälleen arvo
+  !teksti   ei sisällä regexiin teksti sopivaa kohtaa
+  =         tyhjä arvo
+  !         ei-tyhjä arvo
+  >2<4      suurempi kuin 2 ja pienempi kuin 4
+  >=2<=4    2–4 mukaan lukien
+  \N>2      kokonaisluku, joka on suurempi kuin 2
+  \D<2      numero, joka on pienempi kuin 2
+  >2<4!     ei välillä 2–4 (raja-arvoja lukuun ottamatta)
+
+Useat ehdot samassa suodattimessa ovat yhtä aikaa voimassa. Numeeriset
+vertailut vertaavat myös tekstiarvoja merkkijonoina; \N ja \D rajaavat
+kokonaislukuihin tai numeroihin. IP-sarakkeessa <, <=, > ja >= vertaavat
+kelvollisia IPv4-osoitteita numero-osittain, esimerkiksi
+>=192.168.59.10<192.168.59.30. Jos jompikumpi arvo ei ole kelvollinen
+IPv4-osoite, käytetään tavallista vertailua. Regex ja muut sarakkeet
+toimivat ennallaan. Merkit !, <, =, > ja kenoviiva ovat
+operaattorimerkkejä: niiden käyttäminen kirjaimellisesti edellyttää
+kenoviivaa edessä, esimerkiksi \! etsii huutomerkin. Virheellinen regex
+merkitään punaisella, eikä kyseinen suodatin rajaa rivejä ennen korjaamista.
+
+Päivitä reitittimiltä suorittaa macip_server_config.json-tiedostossa luetellut
+Python-skriptit järjestyksessä. Päivitä lista tarpeen mukaan, esimerkiksi:
+
+  "update_commands": [
+    ["asys_mac.py", "secret3.txt"],
+    ["asys_mac.py", "secret2.txt"],
+    ["huawei_lan_inventory.py", "secret1.txt"]
+  ]
+
+ASUS- ja Huawei-skriptit tarvitsevat samassa kansiossa olevan
+macip_common.py-tiedoston asetusten lukemista ja IP-lajittelua varten.
+Kunkin listan ensimmäinen arvo on Python-skriptin polku ja loput sen
+argumentteja. Palvelin käyttää samaa Python-tulkkia kuin käynnistettäessä.
+Suhteelliset polut ja skriptien työhakemisto tarkoittavat palvelimen kansiota.
+Varmista, että kaikkien skriptien asetuksissa macip-tiedosto osoittaa samaan
+palvelimen kansion macip.txt-tiedostoon. Tunnukset pysyvät erillisissä
+secret-tiedostoissa, eikä niitä kirjoiteta palvelimen asetustiedostoon.
+Huawei käyttää samanlaista avain=arvo-asetustiedostoa kuin ASUS. Kopioi
+huawei_config_example.txt nimelle huawei_secret.txt ja täytä reitittimen
+osoite ja tunnukset. Vanhaa huawei_secret_config.py-tiedostoa ei enää lueta.
+Huawei-skriptin komentorivikäyttö on:
+  python huawei_lan_inventory.py huawei_secret.txt
+Kaikkia skriptejä yritetään järjestyksessä myös silloin, jos jokin
+epäonnistuu tai aikakatkaistaan. Päivitys voi siis onnistua osittain:
+editori lataa syntyneen tiedoston ja näyttää epäonnistuneet komennot.
+
+Onnistunut päivitys näyttää ponnahdusikkunan, jos jokin komento havaitsi
+uusia laitteita tai muutti IP-osoitteita. Tulokset näytetään reitittimittäin,
+joten myös saman IP:n edestakaiset muutokset näkyvät. Skriptit tulostavat
+lisäksi koneluettavan MACIP_SUMMARY-JSON-rivin; jos komento ei tuota
+yhteenvetoa, editori ilmoittaa siitä.
+
+Palvelin kuuntelee vain paikallisella koneella ja tarjoaa vain editorin ja
+sen rajapinnat, ei kansion muita tiedostoja. Pythonin requests-paketti
+tarvitaan reitittimien hakuskripteille.

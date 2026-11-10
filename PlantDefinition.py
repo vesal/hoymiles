@@ -1,6 +1,6 @@
 # declare your DTU IP
 # DTU_IP = '192.168.40.130'
-DTU_IP = '192.168.59.158'
+DTU_IP = '192.168.59.182'
 
 # declare list of serial numbers of inverters connected to your DTU
 # glo_inverters = ['116484414795', '116484415551', '116484415768', '116484416422']
