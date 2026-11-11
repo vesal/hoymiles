@@ -4,6 +4,9 @@ import tempfile
 import unittest
 from contextlib import redirect_stdout
 from pathlib import Path
+from unittest.mock import MagicMock, patch
+
+import requests
 
 from macip_scripts import asys_mac
 
@@ -109,6 +112,66 @@ class AsusMacTests(unittest.TestCase):
             ]
 
         self.assertEqual(saved_ips, ["192.0.2.25", "192.0.2.123"])
+
+    def test_logout_uses_authenticated_session(self):
+        session = MagicMock()
+        config = {"protocol": "http", "ip": "192.0.2.1", "verify": "false"}
+        asys_mac.logout(session, config)
+        session.get.assert_called_once_with(
+            "http://192.0.2.1/Logout.asp",
+            headers={"Referer": "http://192.0.2.1/index.asp"},
+            timeout=15, verify=False,
+        )
+        session.get.return_value.raise_for_status.assert_called_once()
+
+    def test_main_logs_out_and_closes_session_on_success_and_failure(self):
+        config = {"protocol": "http", "ip": "192.0.2.1"}
+        for error in (None, ValueError("update failed")):
+            with self.subTest(error=error):
+                session = MagicMock()
+                with patch.object(asys_mac.sys, "argv", ["asys_mac.py", "config.txt"]), \
+                     patch.object(asys_mac, "read_config", return_value=config), \
+                     patch.object(asys_mac, "login", return_value=session), \
+                     patch.object(asys_mac, "get_client_list", return_value={"maclist": []}), \
+                     patch.object(asys_mac, "update_macip", side_effect=error), \
+                     patch.object(asys_mac, "logout") as logout:
+                    if error:
+                        with self.assertRaises(SystemExit):
+                            asys_mac.main()
+                    else:
+                        asys_mac.main()
+                    logout.assert_called_once_with(session, config)
+                    session.__exit__.assert_called_once()
+
+    def test_logout_failure_reports_error_and_fails(self):
+        config = {"protocol": "http", "ip": "192.0.2.1"}
+        session = MagicMock()
+        stderr = io.StringIO()
+        with patch.object(asys_mac.sys, "argv", ["asys_mac.py", "config.txt"]), \
+             patch.object(asys_mac, "read_config", return_value=config), \
+             patch.object(asys_mac, "login", return_value=session), \
+             patch.object(asys_mac, "get_client_list", return_value={"maclist": []}), \
+             patch.object(asys_mac, "update_macip"), \
+             patch.object(asys_mac, "logout", side_effect=requests.ConnectionError("logout failed")), \
+             patch.object(asys_mac.sys, "stderr", stderr):
+            with self.assertRaises(SystemExit):
+                asys_mac.main()
+        self.assertIn("Uloskirjautuminen epäonnistui", stderr.getvalue())
+        session.__exit__.assert_called_once()
+
+    def test_logout_failure_does_not_hide_update_error(self):
+        config = {"protocol": "http", "ip": "192.0.2.1"}
+        output, stderr = io.StringIO(), io.StringIO()
+        with patch.object(asys_mac.sys, "argv", ["asys_mac.py", "config.txt"]), \
+             patch.object(asys_mac, "read_config", return_value=config), \
+             patch.object(asys_mac, "login", return_value=MagicMock()), \
+             patch.object(asys_mac, "get_client_list", side_effect=ValueError("update failed")), \
+             patch.object(asys_mac, "logout", side_effect=requests.ConnectionError("logout failed")), \
+             patch.object(asys_mac.sys, "stderr", stderr), redirect_stdout(output):
+            with self.assertRaises(SystemExit):
+                asys_mac.main()
+        self.assertIn("update failed", output.getvalue())
+        self.assertIn("Uloskirjautuminen epäonnistui", stderr.getvalue())
 
 
 if __name__ == "__main__":

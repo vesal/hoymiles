@@ -56,11 +56,48 @@ Suhteelliset polut ja skriptien työhakemisto tarkoittavat palvelimen kansiota.
 Varmista, että kaikkien skriptien asetuksissa macip-tiedosto osoittaa samaan
 palvelimen kansion macip.txt-tiedostoon. Tunnukset pysyvät erillisissä
 secret-tiedostoissa, eikä niitä kirjoiteta palvelimen asetustiedostoon.
+macip_filter.js tarvitaan sekä paikalliselle editorille että HA-paneelille.
 Huawei käyttää samanlaista avain=arvo-asetustiedostoa kuin ASUS. Kopioi
 huawei_config_example.txt nimelle huawei_secret.txt ja täytä reitittimen
 osoite ja tunnukset. Vanhaa huawei_secret_config.py-tiedostoa ei enää lueta.
 Huawei-skriptin komentorivikäyttö on:
   python huawei_lan_inventory.py huawei_secret.txt
+
+ASUS-skriptille voi antaa asetustiedoston jälkeen yhden tai useamman
+MAC-osoitteen tai säännöllisen lausekkeen välilyönneillä erotettuina:
+  python asus_mac.py secret2.txt A0:B0:BD:17:93:5B 78:7B:8A:98:64:E2
+  python asus_mac.py secret2.txt ".*"
+Lauseketta verrataan koko MAC-osoitteeseen kirjainkoosta riippumatta.
+Skripti tulostaa osumien kaikki get_clientlist-tiedot myös offline-laitteista
+sekä sen, löytyykö laite get_wclientlist-listasta, ja jos löytyy, tukiaseman
+ja taajuuden. Myös pelkässä get_wclientlist-listassa olevat osumat näytetään.
+Jos lausekkeelle ei löydy osumaa, siitä ilmoitetaan. Listat voivat sisältää
+vanhentuneita tietoja. MAC-suodattimilla tulostetaan vain asiakastiedot ja
+mahdolliset virheet, eikä macip.txt-tiedostoa muuteta. Ilman suodattimia
+skripti päivittää tiedoston normaalisti.
+
+ASUS-päivityksessä reitittimen onnistuneen asiakaslistahaun jälkeen poistetaan
+ensin Yhteys-, Signaali- ja Tukiasema-arvot niiltä riveiltä, joiden tukiasema
+vastaa tämän reitittimen router_nickname-asetusta (tai IP-osoitetta, jos
+nimeä ei ole). Sen jälkeen nämä arvot merkitään online-laitteille, joilla on
+Wi-Fi-taajuus, ei-tyhjä amesh_papMac ja negatiivinen RSSI. Muut rivien tiedot
+päivitetään kuten ennen. Ehdot ovat arvio, eivät varmistus: ASUSin tiedot voivat
+olla vanhentuneita. Myöhemmin suoritettava reititin voi korvata aiemman
+tukiaseman; esimerkiksi suorittamalla r3 ennen r2:ta r2:n osuma voittaa.
+Pelkkä ASUS-päivitys ei merkitse poistuneita laitteita offline-tilaan.
+
+ASUS-skripti synkronoi oletuksena macip.txt:n ei-tyhjät Oma nimi -arvot
+reitittimen tuntemien laitteiden lempinimiksi MAC-osoitteen perusteella,
+myös offline-laitteille. Arvoja -- ja 0 ei synkronoida. Tyhjä Oma nimi ei
+poista reitittimen nimeä. Synkronointi tehdään macip.txt:n tallennuksen
+jälkeen; virhe ilmoitetaan eikä peru tallennusta. Synkronoinnin voi poistaa
+käytöstä kyseisen reitittimen secret-tiedostossa:
+  sync_nicknames=false
+MAC-suodattimilla tehtävä debug-haku ei synkronoi nimiä. Reitittimen koko
+custom_clientlist luetaan ennen muutoksia, muiden tietueiden kentät säilytetään,
+ja tallennus varmistetaan lukemalla lista uudelleen. Vältä ASUSin nimien
+muokkausta samanaikaisesti synkronoinnin kanssa.
+
 Kaikkia skriptejä yritetään järjestyksessä myös silloin, jos jokin
 epäonnistuu tai aikakatkaistaan. Päivitys voi siis onnistua osittain:
 editori lataa syntyneen tiedoston ja näyttää epäonnistuneet komennot.

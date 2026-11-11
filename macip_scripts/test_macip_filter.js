@@ -10,11 +10,10 @@ function test(name, fn) {
   console.log(`OK: ${name}`);
 }
 
-const html = fs.readFileSync(path.join(__dirname, "macip.html"), "utf8");
-const start = html.indexOf('  const filterEscape = ');
-const end = html.indexOf("\n  let headers = ", start);
-assert(start >= 0 && end > start, "ComparatorFilter not found in macip.html");
-const ComparatorFilter = vm.runInNewContext(html.slice(start, end) + "\nComparatorFilter");
+const source = fs.readFileSync(path.join(__dirname, "macip_filter.js"), "utf8");
+const context = {};
+vm.runInNewContext(source, context);
+const {ComparatorFilter} = context.MacipFilter;
 
 function matches(filter, value, compareIpv4 = false) {
   return new ComparatorFilter(filter, compareIpv4).test(value);

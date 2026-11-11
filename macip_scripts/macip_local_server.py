@@ -21,6 +21,7 @@ HOST = "127.0.0.1"
 PORT = 8765
 DIRECTORY = Path(__file__).resolve().parent
 EDITOR_FILE = DIRECTORY / "macip.html"
+FILTER_FILE = DIRECTORY / "macip_filter.js"
 INVENTORY_FILE = DIRECTORY / "macip.txt"
 CONFIG_FILE = DIRECTORY / "macip_server_config.json"
 MAX_REQUEST_SIZE = 2_000_000
@@ -172,6 +173,8 @@ class EditorHandler(BaseHTTPRequestHandler):
         try:
             if request_path in ("/", "/macip.html"):
                 self.send_data(200, EDITOR_FILE.read_bytes(), "text/html; charset=utf-8")
+            elif request_path == "/macip_filter.js":
+                self.send_data(200, FILTER_FILE.read_bytes(), "text/javascript; charset=utf-8")
             elif request_path == "/api/macip":
                 with inventory_lock:
                     content = INVENTORY_FILE.read_bytes()

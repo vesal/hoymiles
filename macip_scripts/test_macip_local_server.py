@@ -84,6 +84,12 @@ class LocalServerTests(unittest.TestCase):
         status, _ = self.request("/secret.txt")
         self.assertEqual(status, 404)
 
+    def test_shared_filter_is_served(self):
+        with urlopen(self.base + "/macip_filter.js") as response:
+            self.assertEqual(response.status, 200)
+            self.assertTrue(response.headers["Content-Type"].startswith("text/javascript"))
+            self.assertIn(b"ComparatorFilter", response.read())
+
     def test_router_commands_run_in_order_and_return_inventory(self):
         def run(command, **kwargs):
             self.assertEqual(kwargs["cwd"], Path(self.directory.name))
