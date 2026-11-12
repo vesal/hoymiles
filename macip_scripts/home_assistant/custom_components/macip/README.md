@@ -10,7 +10,7 @@ Alla lähdepolut ovat tämän projektin juuresta ja kohdepolut Home Assistantin
      - `__init__.py`
      - `http.py`
      - `manifest.json`
-- Kopioi `macip_scripts/home_assistant/www/macip-panel.js`
+- Kopioi `macip_scripts/home_assistant/www/macip/macip-panel.js`
   → `/config/www/macip/macip-panel.js`
 - Kopioi `macip_scripts/macip_filter.js`
   → `/config/www/macip/macip_filter.js`
@@ -76,7 +76,7 @@ avataan ensimmäisen kerran. Olemassa olevaa tiedostoa ei korvata.
        sidebar_title: MAC/IP
        sidebar_icon: mdi:lan
        url_path: macip
-       module_url: /local/macip-panel.js
+       module_url: /local/macip/macip-panel.js
    ```
 
 5. Käynnistä Home Assistant uudelleen ja avaa sivupalkista **MAC/IP**.
@@ -101,6 +101,9 @@ Paneeli lukee ja tallentaa listan kirjautumista vaativan rajapinnan kautta.
 Reititinpäivitykset suoritetaan asetetussa järjestyksessä, myös yksittäisen
 komennon epäonnistuessa. Editori näyttää virheet ja estää vanhentuneen
 näkymän tallentamisen.
+
+Pienellä näytöllä otsikko ja painikkeet vierivät taulukon mukana; lyhyellä
+näytöllä alareunan ohjeteksti piilotetaan, jotta taulukolle jää enemmän tilaa.
 
 ## Siirtyminen vanhasta editor-hakemistosta
 

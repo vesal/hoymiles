@@ -86,6 +86,14 @@ class MacipPanel extends HTMLElement {
         dialog input { box-sizing: border-box; display: block; width: 100%; margin-top: .2rem;
           padding: .35rem; font: inherit; }
         #add-error { color: var(--error-color, #b42318); min-height: 1.5em; }
+        @media (max-width: 600px), (max-height: 600px) {
+          :host { padding: 8px; }
+          main { overflow: auto; }
+          .table-wrap { flex: 0 0 auto; overflow: visible; }
+        }
+        @media (max-height: 600px) {
+          .hint { display: none; }
+        }
       </style>
       <main>
         <h1>Verkon laiteluettelo</h1>
