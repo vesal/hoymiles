@@ -1,7 +1,0 @@
-{
-  "update_commands": [
-    ["asus_mac.py", "secret3.txt"],
-    ["asus_mac.py", "secret2.txt"],
-    ["huawei_lan_inventory.py", "secret1.txt"]
-  ]
-}
